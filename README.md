@@ -24,8 +24,28 @@ Comments are marked as `//` and everything after it is ignored until `\n` (UNIX 
 
 Doc comments are marked by `///` and are like regular comments. For now nothing is really planned but they should translate to markdown files.
 
+## Stack descriptor
+The stack descriptor is only used by the type checker to verify definitions.
+The syntax is the following:
+```
+inT::outT
+```
+You can group types by putting parenthesis arround them.
+```
+(T, T)::T
+```
+If the input or output is null, yon can leave it blank
+```
+::T
+```
+Nesting parenthesis is allowed, but does not change anything but help with readability in some cases
+```
+T::(T, (T, T))
+```
+The order of the types, from left to right is top of the stack (TOS) to bottom of the stack (BOS)
+
 ## Definitions
-In Zog, mostly everything is defined by a definition. Definitions links to the next declared block. As the langage is strongly typed, they need a stack descriptor so the type checker know what to do.
+In Zoc, mostly everything is defined by a definition. Definitions links to the next declared block. As the langage is strongly typed, they need a stack descriptor so the type checker know what to do.
 
 Definitions are started by the `define` keyword followed by the name of it. The next seen stack descriptor is linked to the most recent definition.
 
