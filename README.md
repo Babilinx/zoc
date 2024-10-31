@@ -1,18 +1,20 @@
 # Zoc
 
-Zoc is a block oriented concatenative programming language highly inspired by Zig.
+Zoc is a block oriented, stack based concatenative programming language highly inspired by Zig.
 
 # Functionalities
 - Compiled
 - Stack based
+- Concatenative
 - Strongly typed
 - Programmed in itself
 - No hidden allocations
 - No hidden control flow
+- Somewhat data oriented design
 - Portable to *any* architecture
 
 # Concepts
-Each block can be called. They can also contain data.
+Each block can be called. They can also contain data. They can be named, annonimous and inlined.
 
 # Syntax
 Everything is evaluated from top to bottom, left to right.
