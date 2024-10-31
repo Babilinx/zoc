@@ -49,6 +49,11 @@ T::(T, (T, T))
 ```
 The order of the types, from left to right is top of the stack (TOS) to bottom of the stack (BOS)
 
+If you define a word that will be used as a type, put what compose it between the `::`.
+define Pos :(u32, u32): {
+  x>:u32 y>:u32
+  }
+
 ## Blocks
 There are of two types: normal and assembly block.
 But there are also modifiers that change the comportement of blocks: inline and inlinable blocks.
@@ -192,4 +197,19 @@ define Color :: {
 }
 
 Color>red // The integer gets on the stack
+```
+
+## Implementation of a struct
+```
+define Car :(bool, (u32, u32)): {
+  define >Pos :(u32, u32): { >x:u32 >y:u32 }
+  >started:bool
+  >pos:>Pos
+}
+
+define my_car ::*(bool, Car>Pos) { :Car> }
+
+false !my_car>started
+0 !my_car>pos>x
+0 !my_car>pos>y
 ```
