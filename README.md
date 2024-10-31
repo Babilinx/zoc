@@ -154,3 +154,35 @@ You can repeat any type to do, for example, an array.
 u16 ** 10
 ```
 Note that it only works between parenthesis.
+
+## Static memory allocation
+Static memory allocation is done at compile time in the bss segment. At runtime it return the pointer to the type.
+The syntax is `:T>`.
+```
+:u8> // ::*u8
+:(bool, u32) // ::*(bool, u32)
+```
+
+## Point field definition
+You can name a field of memory to access it with point access. They do nothing at runtime, like stack descriptors they assign an offset based on the type.
+The syntax if `>'name':T`.
+```
+>field:u16
+>datas:(i32, bool)
+```
+
+## Implementation of an enum
+```
+// Calling Color does not get an input not set an output
+define Color :: {
+  // Elements are only accessible with point syntax
+  define >red ::u8 <{ %iota } // `%auto` is a comptime word. It is like `ioto` in Go. It gets replaced by litteral int
+  // Each element return an int. Here u8 is adapted
+  define >green ::u8 <{ %iota }
+  define >blue ::u8 <{ %iota }
+  // Sets back the counter to 0
+  %reset
+}
+
+Color>red // The integer gets on the stack
+```
