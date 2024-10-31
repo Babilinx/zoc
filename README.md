@@ -64,4 +64,4 @@ If a name starts by `>`, it will only be acessible by point syntax.
 ### Calling specifications
 Calling a definition by its name will do what the block linked to it does.
 
-If the definition return a pointer, yon can directly fetch its data with `@\`name\`` or store a data of the correct type with `!\`name\`.
+If the definition return a pointer, yon can directly fetch its data with `@'name'` or store a data of the correct type with `!'name'`.
