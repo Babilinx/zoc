@@ -46,6 +46,49 @@ T::(T, (T, T))
 ```
 The order of the types, from left to right is top of the stack (TOS) to bottom of the stack (BOS)
 
+## Blocks
+There are of two types: normal and assembly block.
+But there are also modifiers that change the comportement of blocks: inline and inlinable blocks.
+
+### Normal blocks
+Normal blocks are defined outside of the current block. They need to be explicitly called to be executed.
+
+Normal blocks are enclosed by `{` and `}`. As curly brackets are themself definitions, spacing is needed.
+```
+// OK
+{ 1 2 + }
+// Not OK
+{1 2 -}
+```
+
+### Assembly blocks
+Assembly blocks are the same as normal blocks but takes between them assembly code. They are delemited by `a{` and `}`.
+
+#### Assembly syntax
+Currently used assembly syntax is Intel syntax compiled with NASM.
+
+Each assembly line should end with `;` so it can be multilined.
+As `;` is already used, comments are defined by `;;` until the next EOL (`;`).
+
+### Inlined modifier
+Inlined blocks are compiled where they are defined. They are needed for `while` loops, as they need a place to jump back.
+
+Inlined blocks adds a `.` to the wanted block syntax.
+```
+.a{ } .{ }
+```
+
+### Inlinable modifier
+Inlinable block are inlined where they are called. This is usefull for base blocks like `+` for maximum speed, and space gain.
+
+Inlinable blocks adds a `<` to the wanted block syntax.
+```
+<a{ } <{ }
+```
+
+### Note on modifiers
+You *can't* combine both, as it is useless and because it is harder to parse.
+
 ## Definitions
 In Zoc, mostly everything is defined by a definition. Definitions links to the next declared block. As the langage is strongly typed, they need a stack descriptor so the type checker know what to do.
 
@@ -65,6 +108,8 @@ If a name starts by `>`, it will only be acessible by point syntax.
 Calling a definition by its name will do what the block linked to it does.
 
 If the definition return a pointer, yon can directly fetch its data with `@'name'` or store a data of the correct type with `!'name'`.
+
+You can inline a declaration by calling it like the following: `.'name'`. Instead of calling the block, it's compiled content is, well, inlined.
 
 ## Types
 
