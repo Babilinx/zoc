@@ -18,6 +18,9 @@ Everything is a block. The file itself, functions, variables etc.
 
 Each block can be called. They can also contain data. They can be named, annonymous and inlined.
 
+Like in Forth (and others), each word needs to be separated by spaces.
+The only exception is the stack descriptor.
+
 # Syntax
 Everything is evaluated from top to bottom, left to right.
 
