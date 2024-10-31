@@ -14,7 +14,9 @@ Zoc is a block oriented, stack based concatenative programming language highly i
 - Portable to *any* architecture
 
 # Concepts
-Each block can be called. They can also contain data. They can be named, annonimous and inlined.
+Everything is a block. The file itself, functions, variables etc.
+
+Each block can be called. They can also contain data. They can be named, annonymous and inlined.
 
 # Syntax
 Everything is evaluated from top to bottom, left to right.
