@@ -105,3 +105,4 @@ You can repeat any type to do, for example, an array.
 ```
 u16 ** 10
 ```
+Note that it only works between parenthesis.
