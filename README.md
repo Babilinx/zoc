@@ -155,6 +155,13 @@ u16 ** 10
 ```
 Note that it only works between parenthesis.
 
+### Type casting
+You can cast any output from a function with the syntax `'name':T`.
+```
+1 6 +:u8
+addr @:bool
+```
+
 ## Static memory allocation
 Static memory allocation is done at compile time in the bss segment. At runtime it return the pointer to the type.
 The syntax is `:T>`.
