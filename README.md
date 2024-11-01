@@ -207,7 +207,24 @@ The syntax if `>'name':T`.
 >datas:(i32, bool)
 ```
 
-## Implementation of an enum
+## If-else
+`if` execute the next defined block if TOS is `true`. If it's `false`, the execution continue.
+`else` execute the next defined block and the execution continue. So you can chain multiple `if`s and `else`s.
+```
+1 true if .{ 1 + }
+else .{ false } if .{ 2 + }
+else .{ 3 + }
+```
+
+## While
+`while` execute the next block if TOS is `true`. `repeat` is used to go to the last defined block when the `while` word as been defined.
+```
+10 0 .{ over over < } while .{ 1 + repeat }
+```
+To quit a while loop, use the `quit` word.
+
+# Exemples
+## Enum
 ```
 // Calling Color does not get an input not set an output
 define Color :u8: {
@@ -223,7 +240,7 @@ define Color :u8: {
 Color>red // The integer gets on the stack
 ```
 
-## Implementation of a struct
+## Struct
 ```
 define Car :(bool, (u32, u32)): {
   define >Pos :(u32, u32): { >x:u32 >y:u32 }
@@ -238,7 +255,7 @@ false !my_car>started
 0 !my_car>pos>y
 ```
 
-## Implementation of an union
+## Union
 Zoc union need to be tagged. It is to ensure you are accessing the correct field as the type checker is a little dumb.
 ```
 define Union :(bool ++ u32): {
