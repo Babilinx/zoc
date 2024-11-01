@@ -207,12 +207,12 @@ The syntax if `>'name':T`.
 >datas:(i32, bool)
 ```
 
-## If-else
-`if` execute the next defined block if TOS is `true`. If it's `false`, the execution continue.
-`else` execute the next defined block and the execution continue. So you can chain multiple `if`s and `else`s.
+## If-elif-else
+`if` execute the next defined block if TOS is `true`. If it's `false`, the execution continue. `elif` is like `if`, but
+`else` execute the next defined block and the execution continue.
 ```
 1 true if .{ 1 + }
-else .{ false } if .{ 2 + }
+false elif .{ 2 + }
 else .{ 3 + }
 ```
 
