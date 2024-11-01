@@ -62,9 +62,11 @@ T::(T, (T, T))
 The order of the types, from left to right is top of the stack (TOS) to bottom of the stack (BOS)
 
 If you define a word that will be used as a type, put what compose it between the `::`.
+```
 define Pos :(u32, u32): {
   x>:u32 y>:u32
   }
+```
 
 ## Blocks
 There are of two types: normal and assembly block.
@@ -166,11 +168,21 @@ Strings are delemited by `"` and can be multilines (as it is easyer to parse). T
 Lenght is of type `u32` and the pointer is of type `*u8` as the string is an array of bytes.
 
 ### Operations
+Note that type operations only works between parenthesis.
+
+#### Repeatition
 You can repeat any type to do, for example, an array.
 ```
 u16 ** 10
 ```
-Note that it only works between parenthesis.
+
+#### Fusion
+A fusion of type is used for unions (or anything you might think of).
+```
+u32 ++ bool
+```
+To access a value of a fusion, you need to specify the index of the type in point syntax. The index starts as 0. See more on the implementation of an union
+
 
 ### Type casting
 You can cast any output from a function with the syntax `'name':T`.
@@ -198,7 +210,7 @@ The syntax if `>'name':T`.
 ## Implementation of an enum
 ```
 // Calling Color does not get an input not set an output
-define Color :: {
+define Color :u8: {
   // Elements are only accessible with point syntax
   define >red ::u8 <{ %iota } // `%auto` is a comptime word. It is like `ioto` in Go. It gets replaced by litteral int
   // Each element return an int. Here u8 is adapted
@@ -219,9 +231,23 @@ define Car :(bool, (u32, u32)): {
   >pos:>Pos
 }
 
-define my_car ::*(bool, Car>Pos) { :Car> }
+define my_car ::*(Car) { :Car> }
 
 false !my_car>started
 0 !my_car>pos>x
 0 !my_car>pos>y
+```
+
+## Implementation of an union
+Zoc union need to be tagged. It is to ensure you are accessing the correct field as the type checker is a little dumb.
+```
+define Union :(bool ++ u32): {
+  define >the_bool <{ 0 }
+  define >the_int <{ 1 }
+}
+
+define my_union ::*(Union) { :Union> }
+
+true !my_union>the_bool
+@my_union>the_int // Should push `1` as it is the true value
 ```
