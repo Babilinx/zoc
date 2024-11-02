@@ -17,7 +17,7 @@ Zoc is a block oriented, stack based concatenative programming language highly i
 - [ ] Parser 🚧
 - [ ] Type analysis
   - [ ] Custom types
-- [ ] Sementic analysis (basic one)
+- [ ] Semantic analysis (basic one)
 - [ ] Code generation
   - [ ] Blocks
   - [ ] Definitions
@@ -28,7 +28,7 @@ Zoc is a block oriented, stack based concatenative programming language highly i
 # Concepts
 Everything is a block. The file itself, functions, variables etc.
 
-Each block can be called. They can also contain data. They can be named, annonymous and inlined.
+Each block can be called. They can also contain data. They can be named, anonymous and inlined.
 
 Like in Forth (and others), each word needs to be separated by spaces.
 The only exception is the stack descriptor.
@@ -47,7 +47,7 @@ The syntax is the following:
 ```
 inT::outT
 ```
-You can group types by putting parenthesis arround them.
+You can group types by putting parenthesis around them.
 ```
 (T, T)::T
 ```
@@ -70,12 +70,12 @@ define Pos :(u32, u32): {
 
 ## Blocks
 There are of two types: normal and assembly block.
-But there are also modifiers that change the comportement of blocks: inline and inlinable blocks.
+But there are also modifiers that change the comportment of blocks: inline and inlinable blocks.
 
 ### Normal blocks
 Normal blocks are defined outside of the current block. They need to be explicitly called to be executed.
 
-Normal blocks are enclosed by `{` and `}`. As curly brackets are themself definitions, spacing is needed.
+Normal blocks are enclosed by `{` and `}`. As curly brackets are themselves definitions, spacing is needed.
 ```
 // OK
 { 1 2 + }
@@ -84,7 +84,7 @@ Normal blocks are enclosed by `{` and `}`. As curly brackets are themself defini
 ```
 
 ### Assembly blocks
-Assembly blocks are the same as normal blocks but takes between them assembly code. They are delemited by `a{` and `}`.
+Assembly blocks are the same as normal blocks but takes between them assembly code. They are delimited by `a{` and `}`.
 
 #### Assembly syntax
 Currently used assembly syntax is Intel syntax compiled with NASM.
@@ -101,7 +101,7 @@ Inlined blocks adds a `.` to the wanted block syntax.
 ```
 
 ### Inlinable modifier
-Inlinable block are inlined where they are called. This is usefull for base blocks like `+` for maximum speed, and space gain.
+Inlinable block are inlined where they are called. This is useful for base blocks like `+` for maximum speed, and space gain.
 
 Inlinable blocks adds a `<` to the wanted block syntax.
 ```
@@ -112,7 +112,7 @@ Inlinable blocks adds a `<` to the wanted block syntax.
 You *can't* combine both, as it is useless and because it is harder to parse.
 
 ## Definitions
-In Zoc, mostly everything is defined by a definition. Definitions links to the next declared block. As the langage is strongly typed, they need a stack descriptor so the type checker know what to do.
+In Zoc, mostly everything is defined by a definition. Definitions links to the next declared block. As the language is strongly typed, they need a stack descriptor so the type checker know what to do.
 
 Definitions are started by the `define` keyword followed by the name of it. The next seen stack descriptor is linked to the most recent definition.
 
@@ -124,7 +124,7 @@ define myDefinition (...)::(...) { ... }
 ### Naming specifications
 A name should always start by a letter (lower or upper case).
 
-If a name starts by `>`, it will only be acessible by point syntax.
+If a name starts by `>`, it will only be accessible by point syntax.
 
 ### Calling specifications
 Calling a definition by its name will do what the block linked to it does.
@@ -147,10 +147,12 @@ They are referenced by `i` for signed and `u` for unsigned numbers follow by the
 i32 u16 u8 i64
 ```
 
-### Booleans
-Booleans are of size 1 byte.
+### Boolean
+Boolean are of size 1 byte.
 `true` is represented by `1` and `false` by `0`. *But* in Zoc, `true` and `1` are totally different. They are denoted with `bool`.
-```bool```
+```
+bool
+```
 
 ### Pointers
 Pointers points to a type, and are themself types.
@@ -163,7 +165,7 @@ Fetching a pointer pushes on the stack the dereference of the values it points t
 ```
 
 ### Strings (special)
-Strings are delemited by `"` and can be multilines (as it is easyer to parse). They are stocked in data segment and push on the stack its length and pointer. So it is not really a type in itself.
+Strings are delimited by `"` and can be multilines (as it is easier to parse). They are stocked in data segment and push on the stack its length and pointer. So it is not really a type in itself.
 
 Lenght is of type `u32` and the pointer is of type `*u8` as the string is an array of bytes.
 
