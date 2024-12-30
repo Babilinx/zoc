@@ -1,0 +1,18 @@
+"std" @import const std
+std.debug.print const print
+std.debug.iprint const iprint
+
+pub fn main void :: void {
+    "Number of iterations: " print iinput const number: isize
+
+    0 1 for 0..number in with _ {
+        nextFib
+    } drop
+
+    "\nThe result is: " print iprint "\n" print
+}
+
+fn nextFib isize isize :: isize isize {
+    // n0 n1 -- n1 n2
+    swap over +
+}

@@ -1,0 +1,6 @@
+"std" @import const std
+std.debug.print const print
+
+pub fn main void :: void {
+    "Hello, world!\n" print
+}
