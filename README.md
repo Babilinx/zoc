@@ -149,11 +149,12 @@ var number: i16
 You can create tests right inside your program.
 
 ```zig
-@import("std").testing.expect const expect
+"std" @import const std
+std.testing.expect const expect
 
 test "addition" {
 	1 2 +
-	3 = expect
+	3 = try expect
 }
 ```
 
@@ -251,7 +252,7 @@ Operator overloading is not supported.
 
 ## Arrays
 ```zig
-@import("std) const std
+"std" @import const std
 std.testing.expect const expect
 
 [_]u8{ 'h' 'e' 'l' 'l' 'o' } const message
@@ -271,8 +272,8 @@ test "iterate over an array" {
 var some_int: [100]i16
 
 test "modify an array" {
-	&some_int 0.. for *item i in {
-		@intCast(i) >item.*
+	for &some_int 0.. in with {
+		i @intCast >item.*
 	}
 	some_int[37] 37 = try expect
 	some_int[69] 69 = try expect
@@ -344,7 +345,8 @@ A slice is a combination of a pointer and a length. The difference with an array
 
 ### Sentinel terminated slices
 ```zig
-@import("std").testing.expect const expect
+"std" @import const std
+std.testing.expect const expect
 
 test "0-terminated slice" {
 	"hello" const slice: [:0]const u8
@@ -380,7 +382,8 @@ test "sentinel mismatch" {
 
 ## struct
 ```zig
-@import("std").testing.expect const expect
+"std" @import const std
+std.testing.expect const expect
 
 struct { #x: i32 #y: i32 } const Point
 
@@ -438,10 +441,10 @@ var point: Point
 ```
 
 ### Tuples
-Tuples are like anonymous structs but without specifying the mane of the fields.
+Tuples are like anonymous structs but without specifying the name of the fields.
 
 ```zig
-.{ 45 i16 @as true "hello\n" } const tuple
+.{ (45 i16 @as) true "hello\n" } const tuple
 
 tuple[0] // 45
 ```
@@ -458,10 +461,10 @@ Type.ok const c
 enum(u8) { #zero #one #two #three } const Value
 
 test "int from enum" {
-	@intFromEnum(Value.zero) 0 = try expect
-	@intFromEnum(Value.one) 1 = try expect
-	@intFromEnum(Value.two) 2 = try expect
-	@intFromEnum(Value.three) 3 = try expect
+	Value.zero @intFromEnum 0 = try expect
+	Value.one @intFromEnum 1 = try expect
+	Value.two @intFromEnum 2 = try expect
+	Value.three @intFromEnum 3 = try expect
 }
 
 enum(u16) {
@@ -471,9 +474,9 @@ enum(u16) {
 } const Value2
 
 test "set enum value" {
-	@intFromEnum(Value2.hundred) 100 = try expect
-	@intFromEnum(Value2.thousand) 1000 = try expect
-	@intFromEnum(Value2.million) 1000000 = try expect
+	Value2.hundred @intFromEnum 100 = try expect
+	Value2.thousand @intFromEnum 1000 = try expect
+	Value2.million @intFromEnum 1000000 = try expect
 }
 
 enum(u8) {
@@ -484,10 +487,10 @@ enum(u8) {
 } const Value3
 
 test "enum set and auto values" {
-	@intFromEnum(Value3.a) 3 = try expect
-	@intFromEnum(Value3.b) 4 = try expect
-	@intFromEnum(Value3.c) 0 = try expect
-	@intFromEnum(Value3.d) 1 = try expect
+	Value3.a @intFromEnum 3 = try expect
+	Value3.b @intFromEnum 4 = try expect
+	Value3.c @intFromEnum 0 = try expect
+	Value3.d @intFromEnum 1 = try expect
 }
 
 enum {
@@ -617,7 +620,7 @@ union(enum) {
 	#b: i32
 	#c: bool
 	#d: Point
-	#e
+	#e // Normal enum field
 } const Item
 
 test "capture tagged union field on switch" {
