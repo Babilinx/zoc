@@ -14,9 +14,9 @@ Zoc is a block oriented, stack based concatenative programming language highly i
 - Somewhat data oriented design
 
 # State
-- [ ] Lexer 🚧
-- [ ] Parser
-- [ ] Ast generation
+- [x] Lexer
+- [ ] Parser 🚧
+	- [ ] Ast
 - [ ] ZIR generation
 - [ ] Semantic analysis
 	- [ ] Type analysis
