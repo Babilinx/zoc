@@ -106,6 +106,7 @@ pub const Tokenizer = struct {
         expect_newline,
         identifier,
         builtin,
+        equal,
         period,
         period2,
         string_literal,
@@ -183,9 +184,8 @@ pub const Tokenizer = struct {
                             continue :blk;
                         },
                         '=' => {
-                            self.index += 1;
-                            result.tag = .equal;
-                            break :blk;
+                            state = .equal;
+                            continue :blk;
                         },
                         '|' => {
                             self.index += 1;
@@ -519,6 +519,20 @@ pub const Tokenizer = struct {
                         },
                         else => {
                             result.tag = .bang;
+                            break :blk;
+                        },
+                    }
+                },
+                .equal => {
+                    self.index += 1;
+                    switch (self.buffer[self.index]) {
+                        '>' => {
+                            result.tag = .angle_bracket_right_equal;
+                            self.index += 1;
+                            break :blk;
+                        },
+                        else => {
+                            result.tag = .equal;
                             break :blk;
                         },
                     }
