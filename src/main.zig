@@ -1,33 +1,6 @@
 const std = @import("std");
 const lexer = @import("lexer.zig");
 
-const Token = lexer.Token;
-const TokenArray = std.MultiArrayList(lexer.Token);
-
-fn tokenize(filename: []const u8, arena: std.mem.Allocator) !TokenArray {
-    const file = try std.fs.cwd().openFile(filename, .{});
-    defer file.close();
-    
-    const buf_array = try file.readToEndAllocOptions(arena, std.math.maxInt(usize), null, @alignOf(u8), 0);
-    const buf = buf_array[0.. :0];
-    
-    var token_array: TokenArray = TokenArray{};
-    var Tokenizer = lexer.Tokenizer{ .buffer = buf, .index = 0 };    
-
-    while (true) {        
-        const tok: Token = Tokenizer.next();
-        try token_array.append(arena, tok);
-        
-        std.debug.print("{}\n", .{ tok });
-        
-        if (tok.tag == .eof) {
-            break;
-        }
-    }
-    
-    return token_array;
-}
-
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
@@ -40,7 +13,14 @@ pub fn main() !void {
         return error.IncorrectAmountOfArguments;
     }
     
-    var tokens: TokenArray = try tokenize(args[1], allocator);
-    _ = &tokens;
+    const file = try std.fs.cwd().openFile(args[1], .{});
+    defer file.close();
+    
+    const buf_array = try file.readToEndAllocOptions(allocator, std.math.maxInt(usize), null, @alignOf(u8), 0);
+    const buf = buf_array[0.. :0];
+    
+    const tokens = try lexer.tokenize(buf, allocator);
+    _ = tokens;
+    
 }
 

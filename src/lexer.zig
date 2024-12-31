@@ -1,5 +1,7 @@
 const std = @import("std");
 
+pub const TokenList = std.MultiArrayList(Token);
+
 pub const Token = struct {
     tag: Tag,
     loc: Loc,
@@ -350,7 +352,7 @@ pub const Tokenizer = struct {
                 },
                 .identifier => {
                     self.index += 1;
-                    switch(self.buffer[self.index]) {
+                    switch (self.buffer[self.index]) {
                         'a'...'z', 'A'...'Z', '_', '0'...'9' => continue :blk,
                         else => {
                             const ident = self.buffer[result.loc.start..self.index];
@@ -687,11 +689,29 @@ pub const Tokenizer = struct {
                         continue :blk;
                     },
                     else => break :blk,
-                }
+                },
             }
         }
-        
+
         result.loc.stop = self.index;
         return result;
     }
 };
+
+pub fn tokenize(buf: [:0]const u8, arena: std.mem.Allocator) !TokenList {
+    var token_list = TokenList{};
+    var tokenizer = Tokenizer{ .buffer = buf, .index = 0 };
+    
+    while (true) {        
+        const tok = tokenizer.next();
+        try token_list.append(arena, tok);
+        
+        std.debug.print("{}\n", .{ tok });
+        
+        if (tok.tag == .eof) {
+            break;
+        }
+    }
+    
+    return token_list;
+}
