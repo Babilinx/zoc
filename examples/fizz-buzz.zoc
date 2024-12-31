@@ -1,7 +1,7 @@
 "std" @import const std
 std.debug.print const print
 
-pub fn main void :: void {
+pub fn void main void {
     0 while dup 100 < do {
         dup 3 % over 5 % + 0= if {
             "fizzbuzz "

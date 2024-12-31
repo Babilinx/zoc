@@ -2,7 +2,7 @@
 std.debug.print const print
 std.debug.iprint const iprint
 
-pub fn main void :: void {
+pub fn void main void {
     "Number of iterations: " print iinput const number: isize
 
     0 1 for 0..number in with _ {

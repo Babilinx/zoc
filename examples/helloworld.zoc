@@ -1,6 +1,6 @@
 "std" @import const std
 std.debug.print const print
 
-pub fn main void :: void {
+pub void fn main void {
     "Hello, world!\n" print
 }
