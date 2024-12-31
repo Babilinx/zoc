@@ -188,7 +188,7 @@ Variables and constants only lives in the block they are defined into.
 ```zig
 10 const ten // ten lives in all this file
 
-fn example void :: void {
+fn void example void {
 	var example_var: i16 // only lives inside the example function
 	struct {
 		2 const two // two only lives in this struct but can be called from the struct  
@@ -406,7 +406,7 @@ struct {
 	#data: T
 } const Node
 
-fn LinkedList comptime type :: type {
+fn type LinkedList comptime type {
 	struct {
 		#first: ?*Node
 		#last: ?*Node
@@ -452,7 +452,7 @@ var point: Point
 Tuples are like anonymous structs but without specifying the name of the fields.
 
 ```zig
-.{ (45 i16 @as) true "hello\n" } const tuple
+.{ 45 i16 @as true "hello\n" } const tuple
 
 tuple[0] // 45
 ```
@@ -504,7 +504,7 @@ test "enum set and auto values" {
 enum {
 	#red #green #blue
 
-	fn isRed Color :: bool {
+	fn bool isRed Color {
 		Color.red =
 	}
 } const Color
@@ -651,7 +651,7 @@ while loops can take an optional as a condition and loop while it is not `null`.
 ```zig
 var number_left: u32
 
-fn eventuallyNullSequence void :: ?u32 {
+fn ?u32 eventuallyNullSequence void {
 	numbers_left 0= if { null } else { numbers_left 1- dup >numbers_left }
 }
 
@@ -669,7 +669,7 @@ Like with optionals while loops can work with error union as the condition.
 ```zig
 var numbers_left: u32
 
-fn eventuallyErrorSequence void :: !u32 {
+fn  !32 eventuallyErrorSequence void {
 	numbers_left 0= if { error.ReachedZero } else {
 		numbers_left 1- dup >numbers_left
 	}
@@ -771,7 +771,7 @@ test "if optionals" {
 Executes an expression on scope exit.
 
 ```zig
-fn deferExample void :: !u32 {
+fn !u32 deferExample void {
 	var a: u32
 	2 >a
 	{ defer { 4 >a } }
@@ -817,29 +817,32 @@ test "unreachable" {
 ## Functions
 ```zig
 // Parameters are on the stack. The same goes for the returned value(s)
-fn add i8 i8 :: i8 {
+fn i8 add (i8 i8) {
 	+
 }
 
+// You can remove '()' if there is only one type
+fn bool greaterThan2 i32 { 2 > }
+
 // You can name parameters.
 // Named parameters are immutable.
-fn sub i8 i8 :: i8 with a b {
+fn i8 sub (i8 i8) with a b {
 	a b -
 }
 
 // extern tells the compiler that exist outside the Zoc code.
 // The quoted identifier specify the library to use.
 // Currently only "c" is supported.
-"c" extern fn something i32 i32 :: i32 {} // {} mark the end of the function definition
+"c" extern fn i32 something (i32 i32)
 
 // callconv sets how the arguments are passed to the function when called
-fn somethingElse i32 i32 :: i32 .C callconv { + }
+fn i32 somethingElse (i32 i32) .C callconv { + }
 
 // inline inline a function instead of calling it when invoked.
-inline div i32 i32 :: i32 { / }
+inline fn i32 div (i32 i32) { / }
 
 // pub make the function visible in imports with @import.
-pub fn mul i32 i32 :: i32 { * }
+pub fn i32 mul (i32 i32) { * }
 ```
 
 ## Errors
@@ -852,7 +855,7 @@ error{
 	#FileNotFound
 } const FileOpenError
 
-fn foo void :: FileOpenError { FileOpenError.AccessDenied }
+fn FileOpenError foo void { .AccessDenied }
 
 test "error sets" {
 	foo .AccessDenied = try expect
@@ -871,7 +874,7 @@ A lot of time it is useful to have a type that can be an error or a value. You c
 
 ```zig
 // Here the error set is inferred
-fn checkForNull ?i32 :: !i32 {
+fn !32 checkForNull ?i32 {
 	if {} else { error.Null }
 }
 
@@ -885,7 +888,7 @@ error{
 	#FileNotFound
 } const OpenFileError
 
-fn openFile []const u8 :: OpenFileError![]u8 {
+fn OpenFileError![]u8 openFile []const u8  {
 	//...
 }
 
@@ -899,7 +902,7 @@ test "error union type 2" {
 
 ```zig
 error{ #DoesNotWork } const MyError
-fn faulty void :: !i32 {
+fn !i32 faulty void {
 	MyError.DoesNotWork
 }
 
@@ -924,7 +927,7 @@ Sometimes you want to return the error that you got. With catch you have:
 
 ```zig
 error{ #DoesNotWork } const MyError
-fn faulty void :: !i32 {
+fn !i32 faulty void {
 	MyError.DoesNotWork
 }
 
@@ -1055,7 +1058,7 @@ Converts an integer to another integer while keeping the same value. It can fail
 
 Example:
 ```zig
-fn example i32 :: i32 { ... }
+fn i32 example i32 { ... }
 10 const ten: i16
 ten @intCast example
 ```
@@ -1068,7 +1071,7 @@ Converts a pointer to an int of `usize`.
 
 Example:
 ```zig
-10 const ten:i16
+10 const ten: i16
 &ten @intFromPtr // ptr to `ten`
 ```
 
@@ -1122,7 +1125,7 @@ Example:
 
 #items: []u8
 
-fn printItems *Self :: void with self {
+fn void printItems *Self with self {
 	self.items for i in {
 		i printi
 	}
@@ -1143,7 +1146,7 @@ Return the type of an expression. The expressions will not have any runtime effe
 
 Example:
 ```zig
-fn humainType type :: [:0]const u8 {
+fn [:0]const u8 humainType type {
 	switch {
 		i8 => { "i8" }
 		i16 => { "i16" }
@@ -1162,7 +1165,7 @@ Panic when executed in runtime
 
 Example:
 ```zig
-fn div i32 i32 :: i32 {
+fn i32 div (i32 i32) {
 	dup 0= if { "Dividing by 0 is not allowed" @panic }
 	/
 }
