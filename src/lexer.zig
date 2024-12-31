@@ -13,13 +13,12 @@ pub const Token = struct {
         .{ "if", .keyword_if },
         .{ "else", .keyword_else },
         .{ "fn", .keyword_fn },
-        .{ "foreach", .keyword_foreach },
         .{ "for", .keyword_for },
+        .{ "in", .keyword_in },
         .{ "while", .keyword_while },
         .{ "do", .keyword_do },
         .{ "enum", .keyword_enum },
         .{ "switch", .keyword_switch },
-        .{ "case", .keyword_case },
         .{ "struct", .keyword_struct },
         .{ "union", .keyword_union },
         .{ "const", .keyword_const },
@@ -32,7 +31,6 @@ pub const Token = struct {
         .{ "pub", .keyword_pub },
         .{ "continue", .keyword_continue },
         .{ "return", .keyword_return },
-        .{ "asm", .keyword_asm },
     });
 
     pub const Tag = enum {
@@ -78,13 +76,12 @@ pub const Token = struct {
         keyword_if,
         keyword_else,
         keyword_fn,
-        keyword_foreach,
         keyword_for,
+        keyword_in,
         keyword_while,
         keyword_do,
         keyword_enum,
         keyword_switch,
-        keyword_case,
         keyword_struct,
         keyword_union,
         keyword_const,
@@ -97,7 +94,6 @@ pub const Token = struct {
         keyword_pub,
         keyword_continue,
         keyword_return,
-        keyword_asm,
     };
 };
 
