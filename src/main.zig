@@ -40,7 +40,7 @@ pub fn main() !void {
         return error.IncorrectAmountOfArguments;
     }
     
-    var tokens: TokenArray = try tokenize("examples/fibonacci.zoc", allocator);
+    var tokens: TokenArray = try tokenize(args[1], allocator);
     _ = &tokens;
 }
 
