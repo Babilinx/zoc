@@ -145,6 +145,14 @@ To specify the type of an assignment, put it after a `:` after the identifier.
 var number: i16
 ```
 
+To make the assignement visible on imports, add the `pub` keyword before it.
+
+```zig
+10 pub const ten
+
+pub var number: i16
+```
+
 ## Test
 You can create tests right inside your program.
 
