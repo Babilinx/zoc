@@ -1,4 +1,4 @@
-format ELF64
+format ELF64 executable 3
 
 wstack_len = 1024*4  ; 4 kio
 
@@ -139,8 +139,8 @@ if_end_#id:
 }
 
 
-section '.text' executable
-public _start
+segment executable
+entry _start
 _start:
         ;; Set up wstack frame
         push rbp
@@ -184,11 +184,20 @@ _start:
 ; usize
 zoc_fn 0
         ; call ifTest
-        zoc_call_fn 1, 8
+        ;zoc_call_fn 1, 8
         ; call ifTest2
-        zoc_call_fn 2, 8
+        ;zoc_call_fn 2, 8
+        mov rax, 1
+        zoc_push_qword rax
+        mov rax, data_0
+        zoc_push_qword rax
+        mov rax, data_1
+        zoc_push_qword rax
+
+        zoc_call_fn 3, 8
+
         ; + usize
-        zoc_add_qword
+        ;zoc_add_qword
 zoc_ret_qword
 
 ; ifTest2
@@ -252,3 +261,25 @@ zoc_fn 1
         zoc_if_end 0
         
 zoc_ret_qword
+
+; write
+; usize: fd arg
+; usize: pointer to text
+; usize: text len
+; --
+; none
+zoc_fn 3
+        zoc_pop_qword rdx
+        zoc_pop_qword rsi
+        zoc_pop_qword rdi
+        mov rax, 1
+        syscall
+        zoc_push_qword rax
+zoc_ret_qword
+
+segment readable
+
+data_0 db 'Hello, World',10
+align 8
+data_1 = $ - data_0
+
