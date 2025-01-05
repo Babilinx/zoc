@@ -84,14 +84,87 @@ macro zoc_add_qword {
         add qword [rdx], rax
 }
 
+macro zoc_syscall argc* {
+        zoc_pop_qword rax
+        if argc >= 1
+            zoc_pop_qword rdi
+        end if
+        if argc >= 2
+            zoc_pop_qword rsi
+        end if
+        if argc >= 3
+            zoc_pop_qword r12  ; rdx is used by zoc_pop_qword
+        end if
+        if argc >= 4
+            zoc_pop_qword r10
+        end if
+        if argc >= 5
+            zoc_pop_qword r8
+        end if
+        if argc >= 6
+            zoc_pop_qword r9
+        end if
 
+        if argc >= 3
+            mov r13, rdx
+            mov rdx, r12
+        end if
+
+        syscall
+
+        if argc >= 3
+            mov rdx, r13
+        end if
+
+        zoc_push_qword rax
+}
+
+macro zoc_gt {
+        zoc_pop_qword rdi
+        zoc_pop_qword rsi
+        mov rax, 0
+        mov rcx, 1
+        cmp rsi, rdi
+        cmovg rax, rcx
+        zoc_push_qword rax
+}
+
+macro zoc_lt {
+        zoc_pop_qword rdi
+        zoc_pop_qword rsi
+        mov rax, 0
+        mov rcx, 1
+        cmp rsi, rdi
+        cmovl rax, rcx
+        zoc_push_qword rax
+}
+
+macro zoc_eq {
+        zoc_pop_qword rdi
+        zoc_pop_qword rsi
+        mov rax, 0
+        mov rcx, 1
+        cmp rsi, rdi
+        cmove rax, rcx
+        zoc_push_qword rax
+}
+
+macro zoc_ne {
+        zoc_pop_qword rdi
+        zoc_pop_qword rsi
+        mov rax, 0
+        mov rcx, 1
+        cmp rsi, rdi
+        cmovne rax, rcx
+        zoc_push_qword rax
+}
 ; id: the if number identifier
 ; --
 ; none
 ; TODO: use byte instead of qword
 macro zoc_if id* {
         zoc_pop_qword rax
-        cmpq rax, 1
+        cmp rax, 1
         jne if_end_#id
 }
 
@@ -187,14 +260,27 @@ zoc_fn 0
         ;zoc_call_fn 1, 8
         ; call ifTest2
         ;zoc_call_fn 2, 8
-        mov rax, 1
+        mov rax, data_1
         zoc_push_qword rax
         mov rax, data_0
         zoc_push_qword rax
-        mov rax, data_1
+        mov rax, 1
         zoc_push_qword rax
 
         zoc_call_fn 3, 8
+
+        mov rax, 0
+        zoc_push_qword rax
+        
+        zoc_lt
+
+        zoc_if_else 3
+        mov rax, 1
+        zoc_push_qword rax
+        zoc_else 3
+        mov rax, 0
+        zoc_push_qword rax
+        zoc_if_end 3
 
         ; + usize
         ;zoc_add_qword
@@ -263,18 +349,15 @@ zoc_fn 1
 zoc_ret_qword
 
 ; write
-; usize: fd arg
-; usize: pointer to text
 ; usize: text len
+; usize: pointer to text
+; usize: fd
 ; --
 ; none
 zoc_fn 3
-        zoc_pop_qword rdx
-        zoc_pop_qword rsi
-        zoc_pop_qword rdi
         mov rax, 1
-        syscall
         zoc_push_qword rax
+        zoc_syscall 3
 zoc_ret_qword
 
 segment readable
