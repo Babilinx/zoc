@@ -1,6 +1,7 @@
 "std" @import const std
 std.debug.print const print
 
-pub void fn main void {
+fn usize main (void) {
     "Hello, world!\n" print
+    0
 }
