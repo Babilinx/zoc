@@ -6,7 +6,7 @@ The goal is to provide a feature-full language that can be self hosted and used 
 
 `Zoc` programs lives on the stack; no heap allocation except the ones you make.
 
-`Zoc` have a strong typing that make memory errors harder to do.
+`Zoc` have a strong typing that make errors harder to do.
 
 # Features
 - Compiled
