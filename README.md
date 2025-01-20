@@ -1,32 +1,35 @@
 # Zoc
 
-Zoc is a block oriented, stack based concatenative programming language highly inspired by Zig.
+Zoc is a block oriented, stack based concatenative programming language inspired by Zig, Forth and Porth.
+
+The goal is to provide a feature-full language that can be self hosted and used for everyday programming (or not).
+
+`Zoc` programs lives on the stack; no heap allocation except the ones you make.
+
+`Zoc` have a strong typing that make memory errors harder to do.
 
 # Features
 - Compiled
 - Stack based
 - Concatenative
 - Strongly typed
-- Errors as values
-- Can call C function
 - No hidden allocations
 - No hidden control flow
-- Somewhat data oriented design
+- Usable in production (or not)
 
 # State
-- [x] Lexer
-- [ ] Parser 🚧
-	- [ ] Ast
-- [ ] ZIR generation
+- [x] Lexer 🚧
+- [x] Parser
+- [x] ZIR generation
+- [ ] Type analysis
 - [ ] Semantic analysis
-	- [ ] Type analysis
-- [ ] AIR generation
-- [ ] Code generation
-	- [ ] LLVM
+- [x] AIR generation
+- [x] Code generation
 
 # Roadmap
-- [ ] Basic arithmetic
+- [x] Basic arithmetic
 - [ ] Basic type checking
+- [ ] `@syscall`
 - [ ] Basic functions
 - [ ] Stack manipulation
 - [ ] Basic if else-if else
@@ -45,8 +48,6 @@ Zoc is a block oriented, stack based concatenative programming language highly i
 - [ ] Basic struct
 - [ ] Basic union
 - [ ] Some type checking
-- [ ] Optionals
-- [ ] Error unions
 - [ ] Value capturing
 - [ ] Basic builtins
 	- [ ] `@import`
@@ -56,7 +57,29 @@ Zoc is a block oriented, stack based concatenative programming language highly i
 	- [ ] `@compileError`
 	- [ ] `@panic`
 
+# Quickstart
+The `Zoc` compiler is fully written in Zig (0.13). The source code for the compiler sits in `src/`.
+
+The compiler generate FASM assembly, so you'll need to have it installed.
+
+To build and run the `Zoc` compiler
+```
+zig build run -- <args>
+```
+
+# Zoc internals
+`Zoc` has 3 stacks:
+
+1. data stack: your normal OS stack for all the data needed
+2. working stack: pointers to the data in the data stack
+3. return stack: pointers for returning from calls
+
+The working and return stack are of fixed length.
+
 # Language reference
+
+Note that this is actually the goal of the project. It may change at any time.
+
 ## Comments
 Comments starts with `//` and ends on the new line.
 
@@ -105,11 +128,11 @@ The byte of the ASCII inside the quotes.
 - `u8`
 - `u16`
 - `u32`
-- `u64`
+- `u64`    - Only x86_64
 - `i8`
 - `i16`
 - `i32`
-- `i64`
+- `i64`    - Only x86_64
 - `usize`
 - `isize`
 - `bool`
@@ -119,59 +142,31 @@ The byte of the ASCII inside the quotes.
 
 ### Primitive values
 - `true` and `false`
-- `null`
 - `undefined`
 
 ### Assignments
 The `const` keyword is user to assign a value to an identifier.
-Its value is the current TOS.
+Its value is the current TOS. When possible the values are expanded during compilation.
 
 ```zig
+"std" @import const std
 10 const ten
+struct { usize x usize y } const Pos
 ```
 
 For a mutable value, use the `var` keyword. Variables are first `undefined` when created.
 
 ```zig
 var number
-11 >number
+11 !number
 ```
 
-To specify the type of an assignment, put it after a `:` after the identifier.
+To specify the type of an assignment, put it after the keyword.
 
 ```zig
-10 const ten: i16
+10 const i16 ten
 
-var number: i16
-```
-
-To make the assignement visible on imports, add the `pub` keyword before it.
-
-```zig
-10 pub const ten
-
-pub var number: i16
-```
-
-## Test
-You can create tests right inside your program.
-
-```zig
-"std" @import const std
-std.testing.expect const expect
-
-test "addition" {
-	1 2 +
-	3 = try expect
-}
-```
-
-You can also test if an expression returns an error.
-
-```zig
-test "error program" {
-	try errorFunction
-}
+var i16 number
 ```
 
 ## Variables
@@ -189,7 +184,7 @@ Variables and constants only lives in the block they are defined into.
 10 const ten // ten lives in all this file
 
 fn void example void {
-	var example_var: i16 // only lives inside the example function
+	var i16 example_var // only lives inside the example function
 	struct {
 		2 const two // two only lives in this struct but can be called from the struct  
 	} const MyStruct
@@ -250,82 +245,64 @@ Operator overloading is not supported.
 - `swap`  - swap the top 2 elements of the stack
 - `over`  - copy the element below the TOS
 - `rot`   - rotate the top 3 elements
+- `.`     - use the TOS element
+- `.N`    - use the TOS - N element
 
 ### Special
-- `a orelse { b }` - execute `b` if `a` is `null`
-- `a catch { b }`  - execute `b` if `a` returns an error. Push the error on the stack
-- `a.?`            - unwrap of `a`
-- `&a`             - address of `a`
-- `a.*`            - pointer dereference
+- `&a`  - the address of `a`
+- `a.*` - dereference of `a`
+- `!`   - store `>1` at `>`
+- `!var`  - equivalent of `n &var !`
 
 ## Arrays
 ```zig
-"std" @import const std
-std.testing.expect const expect
+[_]u8{ 'h' 'e' 'l' 'l' 'o' } // push the array on the stack
+dup const message
+// array length
+// accessing a field of an in-stack array does not consumes it
+>len 5 = expect
 
-[_]u8{ 'h' 'e' 'l' 'l' 'o' } const message
-
-test "array length" {
-	message.len 5 = try expect 
+// iterate oven an array
+// using an array on the stack in for consumes it
+0 swap for >1 in { // use one bellow TOS
+	+
+}
+'h' 'e' 'l' 'l' 'o' + + + +
+= expect
 }
 
-test "iterate over an array" {
-	0 message for byte in {
-		byte +
-	}
-	'h' 'e' 'l' 'l' 'o' + + + +
-	= try expect
-}
-
-var some_int: [100]i16
-
-test "modify an array" {
-	for &some_int 0.. in with {
-		i @intCast >item.*
-	}
-	some_int[37] 37 = try expect
-	some_int[69] 69 = try expect
-}
+// You can define var and const with an array
+var [100]i16 some_int
 
 // array operation only works on comptime know arrays length
 [_]i32{ 1 2 3 4 5 } const part_one
-part_one [_]{ 6 7 8 9 10 } ++ const all_parts
-
-test "array concatenation" {
-	i32 &all_parts &[_]{ 1 2 3 4 5 6 7 8 9 10 } std.mem.eql try expect
-}
+part_one [_]i32{ 6 7 8 9 10 } ++ const all_parts
 
 // initialize an array
-[_]u8{0} 10 ** const zero_initialized
+[_]u8{0} 10 **
 
-test "array multiplication" {
-	zero_initialized[3] 0 = try expect
-	zero_initialized.len 10 = try expect
-}
+>[3] 0 = // true
+>len 10 = // true
 
-test "get the index from the stack" {
-	2 message[>] 'l' = try expect
-}
+// get the index from the stack
+2 message[>] 'l' = expect
 ```
 
 ### Multidimensional arrays
 ```zig
-[4][4]u8{ [_]u8{ 0 1 2 3 } ** 4 } const multi_array
+[4][4]u8{ [_]u8{ 0 1 2 3 } ** 4 }
 ```
 
 ### Sentinel-terminated arrays
 ```zig
 // null-terminated string
-[_:0]u8{ 'h' 'e' 'l' 'l' 'o' } const hello
+[_:0]u8{ 'h' 'e' 'l' 'l' 'o' }
 
-test "sentinel-terminated string" {
-	hello.len 4 = try expect
-	hello[5] 0 = try expect
-}
+>len 4 = expect
+>[5] 0 = expect
 ```
 
 ## Pointers
-
 There are two types of pointers: single-item and many-item pointers.
 
 - `*T`   - single-item pointer to one item
@@ -353,74 +330,57 @@ A slice is a combination of a pointer and a length. The difference with an array
 
 ### Sentinel terminated slices
 ```zig
-"std" @import const std
-std.testing.expect const expect
+"hello" // a string litteral is of type []const u8
+// accessing a field of an in-stack slice does not consumes it
+>.len 5 = // true
+>[5] 0 = // true
 
-test "0-terminated slice" {
-	"hello" const slice: [:0]const u8
-	slice.len 5 = try try expect
-	slice[5] 0 = try expect
-}
+var array
+[_]u8{ 3 2 1 0 } !array
 
-test "sentinel-terminated slicing" {
-	var array
-	[_]u8{ 3 2 1 0 } >array
-	var runtime_length: usize
-	2 >runtime_length
-	&runtime_length >_
+// slices have a runtime-know size
+array[0..2 :2]
+>.len 2 = // true
+>[2] 2 = // true
 
-	array[0..runtime_length :2] const slice
-	slice.len 2 = try expect
-	slice[2] 2 = try expect
-}
-
-test "sentinel mismatch" {
-	var array
-	[_]u8{ 3 2 1 0 } >array
-
-	var runtime_length: usize
-	2 >runtime_length
-	&runtime_length >_
-
-	// This will fail as array[2] isn't equal to 0. It will lead
-	// to a runtime panic
-	array[0..runtime_length :0] const slice
-}
+// This will fail as array[2] isn't equal to 0. It will lead
+// to a runtime panic
+1 array[0..> :0] // slice array from 0 to >
+drop
 ```
 
 ## struct
+Note that a `Zoc` file is interpreted as a struct.
+
 ```zig
-"std" @import const std
-std.testing.expect const expect
 
-struct { #x: i32 #y: i32 } const Point
+struct { i32: x i32: y } const Point
 
-Point{ 37 >.x 69 >.y } const p
+Point{ 37 !x 69 !y }
 
-Point{ 34 >.x undefined >.y } var p1
-78 >p1.y
+// accessing an in-stack struct does not consumes it
+>x 37 = // true
+>y 69 = // true
 
 struct {
-	#prev: ?*Node
-	#next: ?*Node
-	#data: T
+	*Node: prev
+	*Node: next
 } const Node
 
-fn type LinkedList comptime type {
-	struct {
-		#first: ?*Node
-		#last: ?*Node
-		#len: usize
+struct { i32: a i32: b }
+// the struct type is not consumed 
+>{ 1 !a 2 !b }
+
+struct {
+	usize: x1
+	usize: x2
+	usize: y1
+	usize: y2
+
+	// struct can have methods
+	fn usize scalarProduct (*Pos) {
+		>.x1 >.x2 * >1.y1 >1.y2 * +
 	}
-}
-
-test "linked list" {
-	i32 LinkedList{ null >.first null >.last 0 >.len } const list
-	var node: Node
-	Node{ null >.prev null >.next 1234 >.data } >node
-	i32 LinkedList{ &node >.first &node >.last 1 >.len } const list
-
-	list.first.?.data 1234 = try expect
 }
 ```
 
@@ -429,107 +389,76 @@ It allows the field to be omitted on struct assignement.
 
 ```zig
 struct {
-	1234 >#a: i32
-	#b: i32
+	i32: 1234 !a
+	i32: b
 } const Foo
 ```
 
-### Anonymous struct literals
-It is allowed to omit the struct type of a literal.
-
-The result struct can coerce to an already defined struct type, or by inferred.
-
+### Anonymous struct
 ```zig
-struct { #x: i16 #y: i16 } const Point
+struct { i32: x i32: y } const Pos
+var Pos pos
 
-var point: Point
-.{ 45 >.x 64 >.y } >point
-
-.{ 10 i16 @as >.some "value" >.thing } const something
+.{ 37 !.x 69 !.y } !pos
 ```
 
-### Tuples
-Tuples are like anonymous structs but without specifying the name of the fields.
 
-```zig
-.{ 45 i16 @as true "hello\n" } const tuple
-
-tuple[0] // 45
-```
 
 ## enum
 ```zig
-"std" @import const std
-std.testing.expect const expect
-
-enum { #ok #not_ok } const Type
+enum { ok not_ok } const Type
 
 Type.ok const c
 
-enum(u8) { #zero #one #two #three } const Value
+enum u8 { zero one two three } const Value
 
-test "int from enum" {
-	Value.zero @intFromEnum 0 = try expect
-	Value.one @intFromEnum 1 = try expect
-	Value.two @intFromEnum 2 = try expect
-	Value.three @intFromEnum 3 = try expect
-}
+Value.zero @intFromEnum 0 = // true
+Value.one @intFromEnum 1 = // true
+Value.two @intFromEnum 2 = // true
+Value.three @intFromEnum 3 = // true
 
-enum(u16) {
-	100 >#hundred
-	1_000 >#thousand
-	1_000_000 >#million
+enum u16 {
+	hundred: 100
+	thousand: 1_000
+	million: 1_000_000
 } const Value2
 
-test "set enum value" {
-	Value2.hundred @intFromEnum 100 = try expect
-	Value2.thousand @intFromEnum 1000 = try expect
-	Value2.million @intFromEnum 1000000 = try expect
+Value2.hundred @intFromEnum 100 = // true
+Value2.thousand @intFromEnum 1000 = // true
+Value2.million @intFromEnum 1000000 = // true
+
+enum u8 {
+	a: 3
+	b
+	c: 0
+	d
 }
 
-enum(u8) {
-	3 >#a
-	#b
-	0 >#c
-	#d
-} const Value3
-
-test "enum set and auto values" {
-	Value3.a @intFromEnum 3 = try expect
-	Value3.b @intFromEnum 4 = try expect
-	Value3.c @intFromEnum 0 = try expect
-	Value3.d @intFromEnum 1 = try expect
-}
+// the enum is not consumed
+>a @intFromEnum 3 = expect
+>b @intFromEnum 4 = expect
+>c @intFromEnum 0 = expect
+>d @intFromEnum 1 = expect
 
 enum {
-	#red #green #blue
+	red green blue
 
-	fn bool isRed Color {
+	fn bool isRed (Color) {
 		Color.red =
 	}
 } const Color
 
-test "enum method" {
-	Color.red const color
+Color.red const color
 
-	color Color.isRed execpt
-}
+color Color.isRed execpt
 
-test "enum switch" {
-	Color.green const color
+Color.green const color
 
-	color switch {
-		Color.red => { false }
-		.green => { true } // This is also valid
-		.blue => { false }
-	} try expect
-}
-
-test "enum literals" {
-	.blue const color: Color
-
-	color .blue = expect // Valid as the types needs to be equal for an equality test
-}
+color switch {
+	.red => { false }
+	.green => { true }
+	.blue => { false }
+} // true
 ```
 
 ## union
@@ -537,32 +466,14 @@ A union defines a set of possibles types that can be used by a value. Only one f
 
 ```zig
 union {
-	#int: i32
-	#uint: u32
-	#boolean: bool
+	i32: int
+	u32: uint
+	bool: boolean
 } const Payload
 
-test "access of multiple fields" {
-	var payload: Payload
-	.{ 10 >.int } >payload
-	payload.uint // Panic as the field int is already in use
-}
-```
-
-### Tagged union
-Unions can be declared with an enum type which makes it usable inside a switch expression.
-
-```zig
-enum { #ok #not_ok } const ReturnTypeTag
-union(ReturnTypeTag) { #ok: u16 #not_ok: void } const ReturnType
-
-test "switch on tagged union" {
-	37 >.ok const ret: ReturnType
-
-	ret switch {
-		.ok => { ret.ok 10 = try expect }
-		.not_ok => { unreachable }
-	}
+var Payload payload
+Payload{ 10 !.int } !payload
+	payload.uint // really unsafe, but it works
 }
 ```
 
@@ -573,256 +484,142 @@ They are used to limit the scope of variable declarations and other builtin expr
 Identifiers cannot be named the same as an already existing identifier in the scope.
 
 ```zig
-"hello" const hello
+fn void hello (void) { }
 
-test "shadowing an identifier" {
-	{
-		"hello hello" const hello // This will fail
-	}
+{
+	"hello hello" const hello // This will fail
 }
 
-test "same identifier on different scopes" {
-	{
-		1 number const
-	}
-	{
-		2 number const
-	}
+// it's ok
+{
+	1 number const
+}
+{
+	2 number const
 }
 ```
 
 ## switch
 ```zig
-test "simple switch" {
-	10 const a: u32
-	100 const b: u32
-	a switch {
-		0 => { 0 }
-		// if 1, 2, 3, 4, 5, 6, 7, 8 or 9
-		1...9 => { 1 }
-		// You can switch a variable as long as it is know at comptime
-		b => { 3 }
-		// Switch needs to handle every case possible.
-		// A lot of time else is mandatory
-		else => { 99 }
-	} 99 = try expect
-}
+10 const u32 a
+100 const u32 b
+a switch {
+	0 => { 0 }
+	// if 1, 2, 3, 4, 5, 6, 7, 8 or 9
+	1...9 => { 1 }
+	// You can switch a variable as long as it is know at comptime
+	b => { 3 }
+	// Switch needs to handle every case possible.
+	// A lot of time else is mandatory
+	else => { 99 }
+} 99 = // true
 
-enum { #red #green #blue } const Color
+enum { red green blue } const Color
 
-test "switch enum" {
-	Color.green switch {
-		.red => { false }
-		.green => { true }
-		.blue => { false }
-		// No else as every case has been handled
-	} try expect
-}
-```
-
-### Tagged union field capture
-```zig
-struct { #x: i32 #y: i32 } const Point
-union(enum) {
-	#a: u32
-	#b: i32
-	#c: bool
-	#d: Point
-	#e // Normal enum field
-} const Item
-
-test "capture tagged union field on switch" {
-	.{ 3 >.x 156 >.y } >.c const a
-
-	a switch {
-		.a .b => with *val { val.* 1+ >val.* }
-		.c => with *val { val.* ! >val.* }
-		.d => with *val { val.*.x 1+ >var.*.x val.*.y 1+ > val.*.y }
-		.e => {}
-	}
-}
+Color.green switch {
+	Color.red => { false }
+	.green => { true } // the type is inferred
+	.blue => { false }
+	// No else as every case has been handled
+} // true
 ```
 
 ## while
-
-### while with optionals
-while loops can take an optional as a condition and loop while it is not `null`. It is possible to capture the value to use it.
-
 ```zig
-var number_left: u32
-
-fn ?u32 eventuallyNullSequence void {
-	numbers_left 0= if { null } else { numbers_left 1- dup >numbers_left }
-}
-
-test "while null capture" {
-	3 >number_left
-	0 while eventuallyNullSequence do with value {
-		value +
-	} 3 = try expect
-}
-```
-
-### while with error unions
-Like with optionals while loops can work with error union as the condition.
-
-```zig
-var numbers_left: u32
-
-fn  !32 eventuallyErrorSequence void {
-	numbers_left 0= if { error.ReachedZero } else {
-		numbers_left 1- dup >numbers_left
-	}
-}
-
-test "while with error union" {
-	3 >numbers_left
-	while eventialyErrorSequence do with value {
-		value +
-	} else with err {
-		err error.ReachedZero = try expect
-	}
-}
+0 while 100 < do {
+	1+
+} 99 = // true
 ```
 
 ## for
 ```zig
-test "basic for" {
-	[_]u32{ 1 2 3 4 5 } const items
+[_]u32{ 1 2 3 4 5 } const items
 
-	// for loops iterates over arrays and slices
-	0 for items[0..2] in {
-		+
-	} 3 = try expect
+// for loops iterates over arrays and slices
+0 for items[0..2] in {
+	+
+} 3 = // true
 
-	// You can capture the value
-	0 for items in with value {
-		// You can break or continue a for loop
-		value 2 = if { continue }
-		value +
-	} 13 = try expect
+// You can capture the value
+0 for items in with value {
+	// You can break or continue a for loop
+	value 2 = if { continue }
+	value +
+} 13 = // true
 
-	// Multiple values are supported
-	// You can get the index with 0..
-	[_]u32{ 6 7 8 9 10 } const items2
-	var result: [5]u32
-	for items items2 0.. in with value value2 {
-		value value2 + >result[>]
-	} result[3] 13 = try expect
-}
+// Multiple values are supported
+// You can get the index with 0..
+[_]u32{ 6 7 8 9 10 } const items2
+var [5]u32 result
+for items items2 0.. in with value value2 {
+	value value2 + !result[>] // >0 gets consumed by ! and >1 by >
+} result[3] 13 = // true
 
-test "for else" {
-	0 for 0..10 in {
-		8 = if { break }
-		1+
-	// else gets executed on breaking
-	} else {
-		7 = try expect
-	}
+0 for 0..10 in {
+	8 = if { break }
+	1+
+// else gets executed on breaking
+} else {
+	7 = // true
 }
 ```
 
 ## if
 ```zig
-test "if boolean" {
-	4 const four
-	four 4 = if {
-		true expect
-	} else { unreachable }
-}
+4 const four
+four 4 = if {
+	true
+} else { unreachable }
 
-test "if error union" {
-	var four: anyerror!u32
-	4 >four
-
-	// if not captured, the value is TOS
-	four if {
-		4 = expect
-	} else { drop unreachable }
-
-	error.NotFour >four
-
-	// capture the values
-	four if with value {
-		value >_
-	} else with err {
-		err error.NotFour = try expect
-	}
-}
-
-test "if optionals" {
-	var four: ?u32
-
-	4 >four
-	four if {
-		4 = expect
-	// else don't have any value passed to it
-	} else { unreachable }
-
-	null >four
-	four if { drop unreachable }
-	else {
-		true try expect
-	}
-}
+four 5 % 0= if {
+	unreachable
+} four 3 % 0= elif {
+	unreachable
+} four 2 % 0= elif {
+	true
+} else { unreachable }
 ```
 
 ## defer
 Executes an expression on scope exit.
 
 ```zig
-fn !u32 deferExample void {
-	var a: u32
-	2 >a
-	{ defer { 4 >a } }
-	a 4 = try expect
-	5 >a
+fn u32 deferExample (void) {
+	var u32 a
+	2 !a
+	{ defer { 4 !a } }
+	a 4 = // true
+	5 !a
 	a
 }
 
-test "defer" {
-	try deferExample 5 = try expect 
-}
+deferExample 5 = // true 
 ```
 
 Last deferred is first executed
 ```zig
-std.io.print const print
+"std" @import const std
+std.debug.print const print
 
-test "defer order" {
-	defer { "1 " print }
-	defer { "2 " print }
-	defer { "3\n" print }
-}
+defer { "1 " print }
+defer { "2 " print }
+defer { "3\n" print }
 // 3 2 1
 ```
 
 Return value inside a defer expression is not allowed.
 ```zig
-test "return value in defer" {
-	defer { 1 } // This will fail
-}
+defer { 1 } // This will fail
 ```
 
-## unreachable
-In debug builds `unreachable` gets replaced with `@panic`.
-In release builds it is used for optimization.
-
-```zig
-test "unreachable" {
-	2 3 + 5 != if { unreachable }
-}
-```
-
-## Functions
+## fn
 ```zig
 // Parameters are on the stack. The same goes for the returned value(s)
 fn i8 add (i8 i8) {
 	+
 }
 
-// You can remove '()' if there is only one type
-fn bool greaterThan2 i32 { 2 > }
+fn bool greaterThan2 (i32) { 2 > }
 
 // You can name parameters.
 // Named parameters are immutable.
@@ -831,147 +628,53 @@ fn i8 sub (i8 i8) with a b {
 }
 
 // extern tells the compiler that exist outside the Zoc code.
-// The quoted identifier specify the library to use.
-// Currently only "c" is supported.
-"c" extern fn i32 something (i32 i32)
-
-// callconv sets how the arguments are passed to the function when called
-fn i32 somethingElse (i32 i32) .C callconv { + }
+// Currently only C is supported.
+extern fn i32 something (i32 i32)
 
 // inline inline a function instead of calling it when invoked.
 inline fn i32 div (i32 i32) { / }
-
-// pub make the function visible in imports with @import.
-pub fn i32 mul (i32 i32) { * }
 ```
 
-## Errors
-An error set is like an enum. They are represented as an unsigned integer of 16 bits greater than 0.
+## with
+`with` is used to associate an identifier to a value in a scope. It can be used in `if`, `elif`, `else`, `while`, `for`, `switch`, `defer` and `fn` with the syntax:
 
 ```zig
-error{
-	#AccessDenied
-	#OutOfMemory
-	#FileNotFound
-} const FileOpenError
-
-fn FileOpenError foo void { .AccessDenied }
-
-test "error sets" {
-	foo .AccessDenied = try expect
-}
-
-// Shortcut for declaring error sets of 1 value
-error.MyPrettyError
-error{ #MyPrettyError }.MyPrettyError = try expect
+<keyword> with <identifiers> { <expressions> }
 ```
 
-### anyerror
-`anyerror` refers to the global error set containing all error sets that are declared.
-
-### Error union type
-A lot of time it is useful to have a type that can be an error or a value. You can achieve that with `!`.
-
 ```zig
-// Here the error set is inferred
-fn !32 checkForNull ?i32 {
-	if {} else { error.Null }
-}
-
-test "basic error union type" {
-	32 checkForNull 32 = expect
-	null checkForNull error.Null = try expect
-}
-
-error{
-	#AccessDenied
-	#FileNotFound
-} const OpenFileError
-
-fn OpenFileError![]u8 openFile []const u8  {
-	//...
-}
-
-test "error union type 2" {
-	"file.txt" try openFile drop
+fn usize main (usize *[]const u8) with argc argv {
+	0
 }
 ```
 
-### catch
-`catch` allow the execution of an expression when the previous expression returned an error.
+## asm
+It is used for calling assembly inside the code.
 
 ```zig
-error{ #DoesNotWork } const MyError
-fn !i32 faulty void {
-	MyError.DoesNotWork
+fn void exit (void) asm {
+	\\mov rax, 60
+	\\mov rdi, 0
+	\\syscall
 }
-
-test "catch" {
-	faulty catch { drop 1 }
-	1 = try expect
-}
-
-// You can also capture the error
-test "catch with capture" {
-	// Here you better do without the capture
-	faulty catch with err {
-		err switch {
-			.DoesNotWork => {}
-		}
+// Or
+fn void exit (void) {
+	asm {
+		\\mov rax, 60
+		\\mov rdi, 0
+		\\syscall
 	}
 }
 ```
 
-### try
-Sometimes you want to return the error that you got. With catch you have:
-
-```zig
-error{ #DoesNotWork } const MyError
-fn !i32 faulty void {
-	MyError.DoesNotWork
-}
-
-test "catch return" {
-	faulty catch { return }
-	drop
-}
-```
-
-`try` does that. It evaluates the expression, and if there is an error returned, the same error is returned. If there is no error, the returned value(s) gets on the stack.
-
-```zig
-test "try" {
-	try faulty
-}
-```
-
-### errdefer
-`errdefer` is a `defer` that is only called when the scope exits with an error.
-
-## Optionals
-An optional is created by putting `?` in front of a type.
-
-```zig
-1234 const int: i32
-1234 const optional_int: ?i32
-```
-
-### orelse
-`orelse` execute the next expression if TOS is null.
-
-```zig
-var some_int: ?i32
-
-test "orelse" {
-	null >some_int
-
-	some_int orelse { 37 } const number
-
-	number 37 = try expect
-}
-```
-
 ## Builtins
+### Syscall
+Perform a syscall with n args.
+
+```zig
+0 60 1 @syscall // exit
+```
+
 ### Import
 Imports a file as a value.
 
@@ -992,7 +695,7 @@ ten i32 @as
 Convert a value from one type to another. The size of both types must be the same. The return type is inferred.
 
 ```zig
-10 0- const ten: i16
+10 0- const i16 ten
 ten @bitCast
 ```
 
@@ -1007,7 +710,7 @@ i64 @sizeOf // 8
 Convert a big endian to little endian and little endian to big endian. It only works on integers types.
 
 ```zig
-10 const ten: i16
+10 const i16 ten
 ten @byteSwap
 ```
 
@@ -1024,7 +727,7 @@ Prints the arguments passed to it at compile time.
 Example:
 ```zig
 10 const ten
-.{ "ten: " ten } @compileLog
+"ten: " .{ ten } @compileLog
 ```
 
 ### EmbedFile
@@ -1040,7 +743,7 @@ Converts a enum value into an integer. The return type is `comptime_int`.
 
 Exemple:
 ```zig
-enum(u8) { #red #green #blue } const Color
+enum u8 { red green blue } const Color
 Color.red @intFromEnum // 0
 ```
 
@@ -1049,8 +752,8 @@ Converts an integer into an enum value. The return type is the inferred result t
 
 Example:
 ```zig
-enum(u8) { #reg #green #blue } const Color
-1 @enumFromInt // Color.green
+enum u8 { reg green blue } const Color
+Color 1 @enumFromInt // Color.green
 ```
 
 ### IntCast
@@ -1058,8 +761,8 @@ Converts an integer to another integer while keeping the same value. It can fail
 
 Example:
 ```zig
-fn i32 example i32 { ... }
-10 const ten: i16
+fn i32 example (i32) { ... }
+10 const i16 ten
 ten @intCast example
 ```
 
@@ -1071,7 +774,7 @@ Converts a pointer to an int of `usize`.
 
 Example:
 ```zig
-10 const ten: i16
+10 const i16 ten
 &ten @intFromPtr // ptr to `ten`
 ```
 
@@ -1081,7 +784,7 @@ Converts an integer of `uzise` to a pointer of the inferred type.
 Example:
 ```zig
 0xA00 const something
-something @ptrFromInt const a_thing: *i16
+something @ptrFromInt const *i16 a_thing
 ```
 
 ### Memcpy
@@ -1123,41 +826,13 @@ Example:
 ```zig
 @This const Self
 
-#items: []u8
+[]u8 items
 
-fn void printItems *Self with self {
+fn void printItems (*Self) with self {
 	self.items for i in {
 		i printi
 	}
 }
-```
-
-### TypeName
-Convert a type to a string literal.
-
-Example:
-```zig
-enum { reg green blue } const Color
-Color @typeName // "Color"
-```
-
-### TypeOf
-Return the type of an expression. The expressions will not have any runtime effect.
-
-Example:
-```zig
-fn [:0]const u8 humainType type {
-	switch {
-		i8 => { "i8" }
-		i16 => { "i16" }
-		i32 => { "i32" }
-		i64 => { "i64" }
-		else => { "something else" }
-	}
-}
-
-10 const ten: i16
-ten @TypeOf humainType print
 ```
 
 ### Panic
