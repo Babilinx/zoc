@@ -33,6 +33,23 @@ macro zoc_pop_qword reg* {
         add rbx, 8
 }
 
+
+macro zoc_dup {
+        mov rax, qword [rbx]
+        zoc_push_qword rax
+}
+
+macro zoc_drop {
+        add rbx, 8
+}
+
+macro zoc_swap {
+        mov rax, qword [rbx]
+        mov rcx, qword [rbx + 8]
+        mov qword [rbx], rcx
+        mov qword [rbx + 8], rax
+}
+
 ; id: the number identifier of the function
 ; ret_bytes: the number of bytes is takes to store the return type
 ; --
@@ -209,6 +226,21 @@ else_#id_#else_id:
 
 macro zoc_if_end id* {
 if_end_#id:
+}
+
+macro zoc_while id* {
+while_#id:
+}
+
+macro zoc_do id* {
+        zoc_pop_qword rax
+        cmp rax, 1
+        jnz while_end_#id
+}
+
+macro while_end id* {
+        jmp while_#id
+while_end_#id:
 }
 
 
