@@ -2,17 +2,20 @@ const std = @import("std");
 
 pub const TokenList = std.MultiArrayList(Token);
 
+pub const Index = u32;
+
 pub const Token = struct {
     tag: Tag,
     loc: Loc,
 
     pub const Loc = struct {
-        start: usize,
-        stop: usize,
+        start: Index,
+        stop: Index,
     };
 
     pub const keywords = std.StaticStringMap(Tag).initComptime(.{
         .{ "if", .keyword_if },
+        .{ "elif", .keyword_elif },
         .{ "else", .keyword_else },
         .{ "fn", .keyword_fn },
         .{ "for", .keyword_for },
@@ -27,10 +30,8 @@ pub const Token = struct {
         .{ "var", .keyword_var },
         .{ "defer", .keyword_defer },
         .{ "with", .keyword_with },
-        .{ "test", .keyword_test },
         .{ "extern", .keyword_extern },
         .{ "inline", .keyword_inline },
-        .{ "pub", .keyword_pub },
         .{ "continue", .keyword_continue },
         .{ "return", .keyword_return },
     });
@@ -38,25 +39,31 @@ pub const Token = struct {
     pub const Tag = enum {
         invalid,
         identifier,
+        number_literal,
         string_literal,
         multiline_string_literal_line,
         char_literal,
         eof,
         builtin,
         bang,
+        bang_equal,
+        bang_identifier,
+        bang_period_identifier,
         at_sign,
         pipe,
         equal,
-        bang_equal,
         l_paren,
         r_paren,
         percent,
+        question_mark,
         l_brace,
         r_brace,
         l_bracket,
         r_bracket,
         period,
         period_asterisk,
+        period_l_brace,
+        period_identifier,
         plus,
         minus,
         asterisk,
@@ -64,9 +71,12 @@ pub const Token = struct {
         caret,
         slash,
         ampersand,
-        question_mark,
+        ampersand_identifier,
         angle_bracket_left,
+        angle_bracket_left_int,
         angle_bracket_left_equal,
+        angle_bracket_left_l_brace,
+        angle_bracket_left_identifier,
         angle_bracket_left_angle_bracket_left,
         angle_bracket_right,
         angle_bracket_right_equal,
@@ -74,8 +84,8 @@ pub const Token = struct {
         tilde,
         ellipsis2,
         ellipsis3,
-        number_literal,
         keyword_if,
+        keyword_elif,
         keyword_else,
         keyword_fn,
         keyword_for,
@@ -101,7 +111,7 @@ pub const Token = struct {
 
 pub const Tokenizer = struct {
     buffer: [:0]const u8,
-    index: usize,
+    index: Index,
 
     const State = enum {
         start,
@@ -111,6 +121,7 @@ pub const Tokenizer = struct {
         equal,
         period,
         period2,
+        period_identifier,
         string_literal,
         string_literal_backslash,
         multiline_string_literal_line,
@@ -118,12 +129,18 @@ pub const Tokenizer = struct {
         char_literal_backslash,
         backslash,
         bang,
+        bang_period, // TODO
+        bang_identifier,
         at_sign,
         slash,
         line_comment_start,
         line_comment,
         int,
         angle_bracket_left,
+        angle_bracket_left_bang,
+        angle_bracket_left_l_brace, // TODO
+        angle_bracket_left_identifier, // TODO
+        angle_bracket_left_int, // TODO
         angle_bracket_right,
         invalid,
     };
@@ -141,6 +158,8 @@ pub const Tokenizer = struct {
 
         blk: while (true) {
             switch (state) {
+                // TODO
+                else => {},
                 .start => {
                     switch (self.buffer[self.index]) {
                         0 => {
@@ -247,6 +266,7 @@ pub const Tokenizer = struct {
                         '+' => {
                             self.index += 1;
                             result.tag = .plus;
+                            break :blk;
                         },
                         '<' => {
                             state = .angle_bracket_left;
@@ -519,6 +539,14 @@ pub const Tokenizer = struct {
                             self.index += 1;
                             break :blk;
                         },
+                        'a'...'z', 'A'...'Z', '_' => {
+                            state = .bang_identifier;
+                            continue :blk;
+                        },
+                        '.' => {
+                            state = .bang_period;
+                            continue :blk;
+                        },
                         else => {
                             result.tag = .bang;
                             break :blk;
@@ -551,6 +579,18 @@ pub const Tokenizer = struct {
                             result.tag = .angle_bracket_left_equal;
                             self.index += 1;
                             break :blk;
+                        },
+                        'a'...'z', 'A'...'Z', '_' => {
+                            state = .angle_bracket_left_identifier;
+                            continue :blk;
+                        },
+                        '0'...'9' => {
+                            state = .angle_bracket_left_int;
+                            continue :blk;
+                        },
+                        '{' => {
+                            state = .angle_bracket_left_l_brace;
+                            continue :blk;
                         },
                         else => {
                             result.tag = .angle_bracket_left;
@@ -590,6 +630,10 @@ pub const Tokenizer = struct {
                             result.tag = .period_asterisk;
                             self.index += 1;
                             break :blk;
+                        },
+                        'a'...'z', 'A'...'Z', '_' => {
+                            state = .period_identifier;
+                            continue :blk;
                         },
                         else => {
                             result.tag = .period;
@@ -701,17 +745,17 @@ pub const Tokenizer = struct {
 pub fn tokenize(buf: [:0]const u8, arena: std.mem.Allocator) !TokenList {
     var token_list = TokenList{};
     var tokenizer = Tokenizer{ .buffer = buf, .index = 0 };
-    
-    while (true) {        
+
+    while (true) {
         const tok = tokenizer.next();
         try token_list.append(arena, tok);
-        
-        std.debug.print("{}\n", .{ tok });
-        
+
+        //std.debug.print("{}\n", .{tok});
+
         if (tok.tag == .eof) {
             break;
         }
     }
-    
+
     return token_list;
 }
