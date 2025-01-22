@@ -55,8 +55,8 @@ fn gen(z: *ZirGen) anyerror!void {
 }
 
 fn genBinOp(z: *ZirGen, tag: Zir.Inst.Tag) !void {
-    const ret_size = getTypeSize(z.zir.instructions.get(z.inst_i).data.call.ret_type);
-    const in_size = try z.getTypesSize(z.zir.instructions.get(z.inst_i).data.call.in_type);
+    const ret_size = getTypeSize(z.zir.instructions.get(z.inst_i).data.bin_op.ret_type);
+    const in_size = try z.getTypesSize(z.zir.instructions.get(z.inst_i).data.bin_op.in_types);
 
     try z.instructions.append(z.gpa, .{
         .tag = zirTagToLlir(tag),

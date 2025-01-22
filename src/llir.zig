@@ -27,6 +27,7 @@ pub const Inst = struct {
         push: Push,
         func: Func,
         ret: Ret,
+        call: Func,
         bin_op: BinOp,
     };
 

@@ -256,6 +256,18 @@ pub fn genRet(c: *CodeGen) !void {
     try c.string_bytes.appendSlice(line);
 }
 
+pub fn genCall(c: *CodeGen) !void {
+    const data = c.llir.instructions.get(c.index).data.call;
+    const ret_size = Size.intToSize(data.ret_size);
+    const id = data.id;
+
+    var buf: [128]u8 = undefined;
+    var line: []const u8 = undefined;
+
+    line = zoc_call(&buf, id, ret_size);
+    try c.string_bytes.appendSlice(line);
+}
+
 pub fn genAdd(c: *CodeGen) !void {
     // const index = c.index;
     // const data = c.llir.instructions.get(index).data.bin_op;
@@ -446,8 +458,8 @@ fn zoc_ret(buffer: []u8, size: Size) []const u8 {
     }
 }
 
-fn zoc_call_fn(buffer: []u8, fn_id: u32, ret_len: u32) []const u8 {
-    return std.fmt.bufPrint(buffer, "\tzoc_call_fn {}, {}\n", .{ fn_id, ret_len }) catch {
+fn zoc_call(buffer: []u8, fn_id: u32, ret_size: Size) []const u8 {
+    return std.fmt.bufPrint(buffer, "\tzoc_call {}, {s}\n", .{ fn_id, Size.toString(ret_size) }) catch {
         std.log.err("zoc_call_fn: No space left", .{});
         std.process.exit(1);
     };

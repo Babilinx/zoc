@@ -56,6 +56,7 @@ pub fn eval(c: *CodeGen, target: anytype) !void {
         .add => try target.genAdd(c),
         .func => try target.genFn(c),
         .ret => try target.genRet(c),
+        .call => try target.genCall(c),
         else => {
             std.log.err("Unimplemented instruction '{s}'", .{@tagName(tag)});
             std.process.exit(1);
