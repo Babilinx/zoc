@@ -103,6 +103,7 @@ fn parseFile(p: *Parse) anyerror!void {
             .plus => try p.parsePlus(),
             .keyword_fn => try p.parseFn(),
             .r_brace => try p.parseRbrace(),
+            .identifier => try p.parseIdentifier(),
             else => {
                 std.log.err("Unimplemented token: '{s}'", .{@tagName(p.token_tags[p.tok_i])});
                 assert(false);
@@ -136,8 +137,8 @@ fn parsePlus(p: *Parse) !void {
     try p.instructions.append(p.gpa, .{
         .tag = .add,
         .data = .{
-            .call = .{
-                .in_type = .{ .start = i_type_start, .len = 2 },
+            .bin_op = .{
+                .in_types = .{ .start = i_type_start, .len = 2 },
                 .ret_type = .anyint,
             },
         },
@@ -148,7 +149,10 @@ fn parseFn(p: *Parse) !void {
     //std.log.info("\tparsing a function", .{});
     _ = p.nextToken();
 
-    const ret_type = p.getType();
+    const ret_type = p.getType() catch {
+        std.log.err("Not a type", .{});
+        std.process.exit(1);
+    };
     _ = p.expectToken(.identifier) catch {
         std.log.err("Expected an identifier found '{s}'", .{@tagName(p.token_tags[p.tok_i])});
         std.process.exit(1);
@@ -185,7 +189,10 @@ fn parseFn(p: *Parse) !void {
     const in_types_start = p.types.items.len;
 
     while (p.token_tags[p.tok_i] != .r_paren) : (_ = p.nextToken()) {
-        const arg_type = p.getType();
+        const arg_type = p.getType() catch {
+            std.log.err("Not a type", .{});
+            std.process.exit(1);
+        };
         //std.log.info("\t\targ: {s}", .{@tagName(arg_type)});
         try p.types.append(arg_type);
     }
@@ -256,7 +263,36 @@ fn parseRbrace(p: *Parse) !void {
     _ = p.nextToken();
 }
 
-fn getType(p: *Parse) Type {
+fn parseIdentifier(p: *Parse) !void {
+    const type_id = p.getType() catch {
+        try p.parseIdentifierNotType();
+        return;
+    };
+
+    _ = type_id;
+
+    // later for struct fields or more
+    assert(false);
+}
+
+fn parseIdentifierNotType(p: *Parse) !void {
+    const locs = p.token_locs[p.tok_i];
+    const name = p.source[locs.start..locs.stop];
+
+    _ = p.nextToken();
+
+    const fn_start = p.findFnDef(name) catch {
+        std.log.err("Function {s} does not exist", .{name});
+        std.process.exit(1);
+    };
+
+    try p.instructions.append(p.gpa, .{
+        .tag = .fn_call,
+        .data = .{ .call = fn_start },
+    });
+}
+
+fn getType(p: *Parse) !Type {
     //std.log.info("\t\tgetting a type", .{});
     switch (p.token_tags[p.tok_i]) {
         .identifier => {
@@ -267,12 +303,35 @@ fn getType(p: *Parse) Type {
             } else if (std.mem.eql(u8, "usize", p.source[start..stop])) {
                 return .usize;
             } else {
-                return .anyint;
+                return error.NotAType;
             }
         },
         else => {
-            std.log.err("Not an identifier", .{});
-            std.process.exit(1);
+            return error.NotAType;
         },
     }
+}
+
+fn findFnDef(p: *Parse, name: []const u8) !Index {
+    for (p.instructions.items(.tag), 0..) |tag, i| {
+        switch (tag) {
+            .fn_def => {
+                const name_range = p.instructions.get(i).data.fn_def.name;
+                if (name.len != name_range.len) {
+                    continue;
+                }
+
+                const fn_name = p.string_bytes.items[name_range.start .. name_range.start + name_range.len];
+
+                if (!std.mem.eql(u8, name, fn_name)) {
+                    continue;
+                }
+
+                return @truncate(i);
+            },
+            else => {},
+        }
+    }
+
+    return error.FunctionNotFound;
 }

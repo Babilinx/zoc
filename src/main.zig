@@ -33,6 +33,10 @@ pub fn main() !void {
     std.log.info("Tokenizing", .{});
     const tokens = try lexer.tokenize(buf, allocator);
 
+    if (debug) {
+        std.debug.print("{any}\n", .{tokens.items(.tag)});
+    }
+
     std.log.info("Parsing", .{});
     var zir = try Parser.parse(allocator, buf, tokens);
 

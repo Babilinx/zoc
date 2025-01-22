@@ -50,7 +50,9 @@ pub const Inst = struct {
         type: Type,
 
         //
-        call: Call,
+        call: Index,
+
+        bin_op: BinOp,
 
         fn_def: FnDef,
 
@@ -67,8 +69,8 @@ pub const Inst = struct {
         len: u32,
     };
 
-    pub const Call = struct {
-        in_type: SubRange,
+    pub const BinOp = struct {
+        in_types: SubRange,
         ret_type: Type,
     };
 

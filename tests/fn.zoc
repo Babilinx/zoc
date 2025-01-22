@@ -1,0 +1,11 @@
+fn usize two (void) {
+    2
+}
+
+fn usize four (void) {
+    two two +
+}
+
+fn usize main (void) {
+    2 four +
+}

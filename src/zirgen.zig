@@ -19,6 +19,8 @@ inst_i: u32,
 
 fn_id: u32,
 
+fn_tr: std.ArrayList(u32),
+
 pub fn genZir(gpa: std.mem.Allocator, zir: *Zir) !Llir {
     var zirgen: ZirGen = .{
         .gpa = gpa,
@@ -28,7 +30,11 @@ pub fn genZir(gpa: std.mem.Allocator, zir: *Zir) !Llir {
         .extra_index = 0,
         .inst_i = 0,
         .fn_id = 1,
+        .fn_tr = std.ArrayList(u32).init(gpa),
     };
+
+    // for main function => index 0
+    _ = try zirgen.fn_tr.addOne();
 
     try zirgen.gen();
 
@@ -49,14 +55,14 @@ fn gen(z: *ZirGen) anyerror!void {
             .fn_proto => unreachable,
             .fn_ret => try z.genFnRet(),
             .eof => unreachable,
-            .fn_call => unreachable,
+            .fn_call => try z.genFnCall(),
         }
     }
 }
 
 fn genBinOp(z: *ZirGen, tag: Zir.Inst.Tag) !void {
-    const ret_size = getTypeSize(z.zir.instructions.get(z.inst_i).data.call.ret_type);
-    const in_size = try z.getTypesSize(z.zir.instructions.get(z.inst_i).data.call.in_type);
+    const ret_size = getTypeSize(z.zir.instructions.get(z.inst_i).data.bin_op.ret_type);
+    const in_size = try z.getTypesSize(z.zir.instructions.get(z.inst_i).data.bin_op.in_types);
 
     try z.instructions.append(z.gpa, .{
         .tag = zirTagToLlir(tag),
@@ -97,6 +103,11 @@ fn genFnDef(z: *ZirGen) !void {
     const ret_type = z.zir.instructions.get(z.inst_i).data.fn_def.ret_type;
     const ret_type_len = getTypeSize(ret_type);
 
+    const index = &[_]u32{z.inst_i};
+
+    _ = try z.fn_tr.addOne();
+    try z.fn_tr.replaceRange(fn_id, 1, index);
+
     try z.instructions.append(z.gpa, .{
         .tag = .func,
         .data = .{
@@ -120,6 +131,33 @@ fn genFnRet(z: *ZirGen) !void {
             .ret = .{ .size = ret_size },
         },
     });
+}
+fn genFnCall(z: *ZirGen) !void {
+    const fn_def = z.zir.instructions.get(z.inst_i).data.call;
+    const ret_type = z.zir.instructions.get(fn_def).data.fn_def.ret_type;
+    var fn_id: ?usize = null;
+
+    for (0.., z.fn_tr.items) |id, i| {
+        if (i == fn_def) {
+            fn_id = id;
+            break;
+        }
+    }
+
+    if (fn_id) |id| {
+        try z.instructions.append(z.gpa, .{
+            .tag = .call,
+            .data = .{
+                .call = .{
+                    .id = @truncate(id),
+                    .ret_size = getTypeSize(ret_type),
+                },
+            },
+        });
+    } else {
+        std.log.err("Unknown function def or id", .{});
+        std.process.exit(1);
+    }
 }
 
 fn getTypeSize(zir_type: Zir.Inst.Type) u8 {
