@@ -30,7 +30,7 @@ The goal is to provide a feature-full language that can be self hosted and used 
 - [x] Basic arithmetic
 - [ ] Basic type checking
 - [ ] `@syscall`
-- [ ] Basic functions
+- [x] Basic functions
 - [ ] Stack manipulation
 - [ ] Basic if else-if else
 - [ ] Full arithmetic, logic and boolean operators
