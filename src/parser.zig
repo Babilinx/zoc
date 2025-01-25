@@ -142,9 +142,10 @@ fn parsePlus(p: *Parse) !void {
     try p.types.append(.anyint);
 
     try p.instructions.append(p.gpa, .{
-        .tag = .add,
+        .tag = .bin_op,
         .data = .{
             .bin_op = .{
+                .bin_op_tag = .add,
                 .in_types = .{ .start = @intCast(in_types_start), .len = 2 },
                 .ret_type = @intCast(ret_type_index),
             },

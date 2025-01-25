@@ -20,8 +20,7 @@ pub const Inst = struct {
     data: Data,
 
     pub const Tag = enum {
-        add,
-        sub,
+        bin_op,
         int,
         builtin_print,
         fn_proto,
@@ -29,6 +28,11 @@ pub const Inst = struct {
         fn_ret,
         fn_call,
         eof,
+    };
+
+    pub const BinOpTag = enum {
+        add,
+        sub,
     };
 
     pub const Type = enum {
@@ -70,6 +74,7 @@ pub const Inst = struct {
     };
 
     pub const BinOp = struct {
+        bin_op_tag: BinOpTag,
         in_types: SubRange,
         ret_type: Index,
     };
