@@ -47,9 +47,8 @@ pub fn genZir(gpa: std.mem.Allocator, zir: *Zir) !Llir {
 fn gen(z: *ZirGen) anyerror!void {
     while (z.zir.instructions.get(z.inst_i).tag != .eof) : (z.inst_i += 1) {
         switch (z.zir.instructions.get(z.inst_i).tag) {
-            .add => try z.genBinOp(.add),
+            .bin_op => try z.genBinOp(),
             .int => try z.genInt(),
-            .sub => try z.genBinOp(.sub),
             .builtin_print => {}, // try z.genBuiltinPrint(),
             .fn_def => try z.genFnDef(),
             .fn_proto => unreachable,
@@ -60,12 +59,14 @@ fn gen(z: *ZirGen) anyerror!void {
     }
 }
 
-fn genBinOp(z: *ZirGen, tag: Zir.Inst.Tag) !void {
-    const ret_size = z.getTypeSize(z.zir.instructions.get(z.inst_i).data.bin_op.ret_type);
-    const in_size = try z.getTypesSize(z.zir.instructions.get(z.inst_i).data.bin_op.in_types);
+fn genBinOp(z: *ZirGen) !void {
+    const data = z.zir.instructions.get(z.inst_i).data;
+    const ret_size = z.getTypeSize(data.bin_op.ret_type);
+    const in_size = try z.getTypesSize(data.bin_op.in_types);
+    const tag = data.bin_op.bin_op_tag;
 
     try z.instructions.append(z.gpa, .{
-        .tag = zirTagToLlir(tag),
+        .tag = zirBinOpTagToLlir(tag),
         .data = .{
             .bin_op = .{
                 .lhs_size = in_size[0],
@@ -182,11 +183,11 @@ fn getTypesSize(z: *ZirGen, range: Zir.Inst.SubRange) ![]u8 {
     return size_list.toOwnedSlice();
 }
 
-fn zirTagToLlir(tag: Zir.Inst.Tag) Llir.Inst.Tag {
+fn zirBinOpTagToLlir(tag: Zir.Inst.BinOpTag) Llir.Inst.Tag {
     return switch (tag) {
         .add => .add,
         .sub => .sub,
-        else => unreachable,
+        // else => unreachable,
     };
 }
 
