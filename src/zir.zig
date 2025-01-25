@@ -47,7 +47,7 @@ pub const Inst = struct {
         // Literal string
         str: Str,
 
-        type: Type,
+        type: Index,
 
         //
         call: Index,
@@ -61,7 +61,7 @@ pub const Inst = struct {
 
     pub const Int = struct {
         int: u64,
-        type: Type,
+        type: Index,
     };
 
     pub const Str = struct {
@@ -71,12 +71,12 @@ pub const Inst = struct {
 
     pub const BinOp = struct {
         in_types: SubRange,
-        ret_type: Type,
+        ret_type: Index,
     };
 
     pub const FnDef = struct {
         name: SubRange,
-        ret_type: Type,
+        ret_type: Index,
     };
 
     pub const FnProto = struct {
