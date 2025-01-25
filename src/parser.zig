@@ -116,6 +116,10 @@ fn parseNumberLiteral(p: *Parse) anyerror!void {
     const i = p.nextToken();
     const start = p.token_locs[i].start;
     const end = p.token_locs[i].stop;
+
+    const type_index: Index = @intCast(p.types.items.len);
+
+    try p.types.append(.comptime_int);
     try p.instructions.append(p.gpa, .{
         .tag = .int,
         .data = .{
@@ -123,7 +127,7 @@ fn parseNumberLiteral(p: *Parse) anyerror!void {
                 .int = std.fmt.parseInt(usize, p.source[start..end], 10) catch |err| {
                     return err;
                 },
-                .type = .usize,
+                .type = type_index,
             },
         },
     });
@@ -132,14 +136,17 @@ fn parseNumberLiteral(p: *Parse) anyerror!void {
 fn parsePlus(p: *Parse) !void {
     //std.log.info("\tparsing '+'", .{});
     _ = p.nextToken();
-    const i_type_start: Index = @intCast(p.types.items.len);
+    const in_types_start = p.types.items.len;
     try p.types.appendSlice(&.{ .anyint, .anyint });
+    const ret_type_index: Index = @intCast(p.types.items.len);
+    try p.types.append(.anyint);
+
     try p.instructions.append(p.gpa, .{
         .tag = .add,
         .data = .{
             .bin_op = .{
-                .in_types = .{ .start = i_type_start, .len = 2 },
-                .ret_type = .anyint,
+                .in_types = .{ .start = @intCast(in_types_start), .len = 2 },
+                .ret_type = @intCast(ret_type_index),
             },
         },
     });
@@ -153,6 +160,9 @@ fn parseFn(p: *Parse) !void {
         std.log.err("Not a type", .{});
         std.process.exit(1);
     };
+    const ret_type_index = p.types.items.len;
+    try p.types.append(ret_type);
+
     _ = p.expectToken(.identifier) catch {
         std.log.err("Expected an identifier found '{s}'", .{@tagName(p.token_tags[p.tok_i])});
         std.process.exit(1);
@@ -175,10 +185,10 @@ fn parseFn(p: *Parse) !void {
     try p.instructions.append(p.gpa, .{ .tag = .fn_def, .data = .{
         .fn_def = .{
             .name = .{
-                .start = @truncate(fn_id_bytes_start),
-                .len = @truncate(fn_id_stop - fn_id_start),
+                .start = @intCast(fn_id_bytes_start),
+                .len = @intCast(fn_id_stop - fn_id_start),
             },
-            .ret_type = ret_type,
+            .ret_type = @intCast(ret_type_index),
         },
     } });
 
@@ -206,8 +216,8 @@ fn parseFn(p: *Parse) !void {
         .data = .{
             .fn_proto = .{
                 .arg_types = .{
-                    .start = @truncate(in_types_start),
-                    .len = @truncate(in_types_stop - in_types_start),
+                    .start = @intCast(in_types_start),
+                    .len = @intCast(in_types_stop - in_types_start),
                 },
                 .end = undefined,
             },

@@ -61,7 +61,7 @@ fn gen(z: *ZirGen) anyerror!void {
 }
 
 fn genBinOp(z: *ZirGen, tag: Zir.Inst.Tag) !void {
-    const ret_size = getTypeSize(z.zir.instructions.get(z.inst_i).data.bin_op.ret_type);
+    const ret_size = z.getTypeSize(z.zir.instructions.get(z.inst_i).data.bin_op.ret_type);
     const in_size = try z.getTypesSize(z.zir.instructions.get(z.inst_i).data.bin_op.in_types);
 
     try z.instructions.append(z.gpa, .{
@@ -77,7 +77,7 @@ fn genBinOp(z: *ZirGen, tag: Zir.Inst.Tag) !void {
 }
 
 fn genInt(z: *ZirGen) !void {
-    const int_size = getTypeSize(z.zir.instructions.get(z.inst_i).data.int.type);
+    const int_size = z.getTypeSize(z.zir.instructions.get(z.inst_i).data.int.type);
     const int = z.zir.instructions.get(z.inst_i).data.int.int;
 
     const index = z.extra_index;
@@ -101,7 +101,7 @@ fn genFnDef(z: *ZirGen) !void {
     const fn_id = if (std.mem.eql(u8, "main", fn_name_str)) 0 else z.getFnId();
 
     const ret_type = z.zir.instructions.get(z.inst_i).data.fn_def.ret_type;
-    const ret_type_len = getTypeSize(ret_type);
+    const ret_type_len = z.getTypeSize(ret_type);
 
     const index = &[_]u32{z.inst_i};
 
@@ -123,7 +123,7 @@ fn genFnDef(z: *ZirGen) !void {
 
 fn genFnRet(z: *ZirGen) !void {
     const ret_type = z.zir.instructions.get(z.inst_i).data.type;
-    const ret_size = getTypeSize(ret_type);
+    const ret_size = z.getTypeSize(ret_type);
 
     try z.instructions.append(z.gpa, .{
         .tag = .ret,
@@ -150,7 +150,7 @@ fn genFnCall(z: *ZirGen) !void {
             .data = .{
                 .call = .{
                     .id = @truncate(id),
-                    .ret_size = getTypeSize(ret_type),
+                    .ret_size = z.getTypeSize(ret_type),
                 },
             },
         });
@@ -160,7 +160,9 @@ fn genFnCall(z: *ZirGen) !void {
     }
 }
 
-fn getTypeSize(zir_type: Zir.Inst.Type) u8 {
+fn getTypeSize(z: *ZirGen, zir_type_index: Index) u8 {
+    const zir_type = z.zir.types[zir_type_index];
+
     return switch (zir_type) {
         .void => 0,
         .u8 => 1,
@@ -175,7 +177,7 @@ fn getTypesSize(z: *ZirGen, range: Zir.Inst.SubRange) ![]u8 {
     var size_list = std.ArrayList(u8).init(z.gpa);
 
     for (0..range.len) |i| {
-        try size_list.append(getTypeSize(z.zir.types[i]));
+        try size_list.append(z.getTypeSize(@intCast(i)));
     }
     return size_list.toOwnedSlice();
 }
