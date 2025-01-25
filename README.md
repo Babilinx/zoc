@@ -18,10 +18,10 @@ The goal is to provide a feature-full language that can be self hosted and used 
 - Usable in production (or not)
 
 # State
-- [x] Lexer 🚧
+- [x] Lexer
 - [x] Parser
 - [x] ZIR generation
-- [ ] Type analysis
+- [ ] Type analysis 🚧
 - [ ] Semantic analysis
 - [x] AIR generation
 - [x] Code generation
@@ -151,7 +151,7 @@ Its value is the current TOS. When possible the values are expanded during compi
 ```zig
 "std" @import const std
 10 const ten
-struct { usize x usize y } const Pos
+struct { x: usize x: usize } const Pos
 ```
 
 For a mutable value, use the `var` keyword. Variables are first `undefined` when created.
@@ -164,9 +164,9 @@ var number
 To specify the type of an assignment, put it after the keyword.
 
 ```zig
-10 const i16 ten
+10 const ten: i16
 
-var i16 number
+var number: i16
 ```
 
 ## Variables
@@ -184,7 +184,7 @@ Variables and constants only lives in the block they are defined into.
 10 const ten // ten lives in all this file
 
 fn void example void {
-	var i16 example_var // only lives inside the example function
+	var example_var: i16 // only lives inside the example function
 	struct {
 		2 const two // two only lives in this struct but can be called from the struct  
 	} const MyStruct
@@ -245,14 +245,14 @@ Operator overloading is not supported.
 - `swap`  - swap the top 2 elements of the stack
 - `over`  - copy the element below the TOS
 - `rot`   - rotate the top 3 elements
-- `.`     - use the TOS element
-- `.N`    - use the TOS - N element
+- `>`     - use the TOS element
+- `>N`    - use the TOS - N element
 
 ### Special
 - `&a`  - the address of `a`
 - `a.*` - dereference of `a`
 - `!`   - store `>1` at `>`
-- `!var`  - equivalent of `n &var !`
+- `!var`  - equivalent of `val &var !`
 
 ## Arrays
 ```zig
@@ -260,7 +260,7 @@ Operator overloading is not supported.
 dup const message
 // array length
 // accessing a field of an in-stack array does not consumes it
->len 5 = expect
+>.len 5 = expect
 
 // iterate oven an array
 // using an array on the stack in for consumes it
@@ -272,7 +272,7 @@ dup const message
 }
 
 // You can define var and const with an array
-var [100]i16 some_int
+var some_int: [100]i16
 
 // array operation only works on comptime know arrays length
 [_]i32{ 1 2 3 4 5 } const part_one
@@ -282,7 +282,7 @@ part_one [_]i32{ 6 7 8 9 10 } ++ const all_parts
 [_]u8{0} 10 **
 
 >[3] 0 = // true
->len 10 = // true
+>.len 10 = // true
 
 // get the index from the stack
 2 message[>] 'l' = expect
@@ -298,7 +298,7 @@ part_one [_]i32{ 6 7 8 9 10 } ++ const all_parts
 // null-terminated string
 [_:0]u8{ 'h' 'e' 'l' 'l' 'o' }
 
->len 4 = expect
+>.len 4 = expect
 >[5] 0 = expect
 ```
 
@@ -354,28 +354,28 @@ Note that a `Zoc` file is interpreted as a struct.
 
 ```zig
 
-struct { i32: x i32: y } const Point
+struct { x: i32 y: i32 } const Point
 
 Point{ 37 !x 69 !y }
 
 // accessing an in-stack struct does not consumes it
->x 37 = // true
->y 69 = // true
+>.x 37 = // true
+>.y 69 = // true
 
 struct {
-	*Node: prev
-	*Node: next
+	prev: *Node
+        next: *Node
 } const Node
 
-struct { i32: a i32: b }
+struct { a: i32 b: i32 }
 // the struct type is not consumed 
 >{ 1 !a 2 !b }
 
 struct {
-	usize: x1
-	usize: x2
-	usize: y1
-	usize: y2
+	x1: usize
+	x2: usize
+	y1: usize
+	y2: usize
 
 	// struct can have methods
 	fn usize scalarProduct (*Pos) {
@@ -389,14 +389,14 @@ It allows the field to be omitted on struct assignement.
 
 ```zig
 struct {
-	i32: 1234 !a
-	i32: b
+	a: i32: 1234
+	b: i32
 } const Foo
 ```
 
 ### Anonymous struct
 ```zig
-struct { i32: x i32: y } const Pos
+struct { x: i32 y: i32 } const Pos
 var Pos pos
 
 .{ 37 !.x 69 !.y } !pos
@@ -435,10 +435,10 @@ enum u8 {
 }
 
 // the enum is not consumed
->a @intFromEnum 3 = expect
->b @intFromEnum 4 = expect
->c @intFromEnum 0 = expect
->d @intFromEnum 1 = expect
+>.a @intFromEnum 3 = expect
+>.b @intFromEnum 4 = expect
+>.c @intFromEnum 0 = expect
+>.d @intFromEnum 1 = expect
 
 enum {
 	red green blue
@@ -466,9 +466,9 @@ A union defines a set of possibles types that can be used by a value. Only one f
 
 ```zig
 union {
-	i32: int
-	u32: uint
-	bool: boolean
+	int: i32
+	uint: u32
+	boolean: bool
 } const Payload
 
 var Payload payload
@@ -492,17 +492,17 @@ fn void hello (void) { }
 
 // it's ok
 {
-	1 number const
+	1 const number
 }
 {
-	2 number const
+	2 const number
 }
 ```
 
 ## switch
 ```zig
-10 const u32 a
-100 const u32 b
+10 const a
+100 const b
 a switch {
 	0 => { 0 }
 	// if 1, 2, 3, 4, 5, 6, 7, 8 or 9
@@ -550,7 +550,7 @@ Color.green switch {
 // Multiple values are supported
 // You can get the index with 0..
 [_]u32{ 6 7 8 9 10 } const items2
-var [5]u32 result
+var result: [5]u32
 for items items2 0.. in with value value2 {
 	value value2 + !result[>] // >0 gets consumed by ! and >1 by >
 } result[3] 13 = // true
@@ -585,7 +585,7 @@ Executes an expression on scope exit.
 
 ```zig
 fn u32 deferExample (void) {
-	var u32 a
+	var a: u32
 	2 !a
 	{ defer { 4 !a } }
 	a 4 = // true
@@ -695,7 +695,7 @@ ten i32 @as
 Convert a value from one type to another. The size of both types must be the same. The return type is inferred.
 
 ```zig
-10 0- const i16 ten
+10 0- const ten: i16
 ten @bitCast
 ```
 
@@ -710,7 +710,7 @@ i64 @sizeOf // 8
 Convert a big endian to little endian and little endian to big endian. It only works on integers types.
 
 ```zig
-10 const i16 ten
+10 const ten: i16
 ten @byteSwap
 ```
 
@@ -753,21 +753,24 @@ Converts an integer into an enum value. The return type is the inferred result t
 Example:
 ```zig
 enum u8 { reg green blue } const Color
-Color 1 @enumFromInt // Color.green
+Color.green 1 @enumFromInt = // true
 ```
 
 ### IntCast
-Converts an integer to another integer while keeping the same value. It can fail.
+Converts an integer to another integer while keeping the same value. It can fail at runtime if there is an overflow
 
 Example:
 ```zig
 fn i32 example (i32) { ... }
-10 const i16 ten
+10 const ten: i16
 ten @intCast example
 ```
 
 ### IntFromBool
-Converts `true` to `@as(u1, 1)` and `false` to `@as(u1, 0)`.
+```zig
+false @intFromBool // 0: u8
+true @intFromBool // 1: u8
+```
 
 ### IntFromPtr
 Converts a pointer to an int of `usize`.
@@ -775,7 +778,7 @@ Converts a pointer to an int of `usize`.
 Example:
 ```zig
 10 const i16 ten
-&ten @intFromPtr // ptr to `ten`
+&ten @intFromPtr // &ten: usize
 ```
 
 ### PtrFromInt
@@ -826,7 +829,7 @@ Example:
 ```zig
 @This const Self
 
-[]u8 items
+items: []u8
 
 fn void printItems (*Self) with self {
 	self.items for i in {
