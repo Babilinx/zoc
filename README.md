@@ -21,14 +21,14 @@ The goal is to provide a feature-full language that can be self hosted and used 
 - [x] Lexer
 - [x] Parser
 - [x] ZIR generation
-- [ ] Type analysis 🚧
+- [x] Type analysis 🚧
 - [ ] Semantic analysis
 - [x] AIR generation
 - [x] Code generation
 
 # Roadmap
 - [x] Basic arithmetic
-- [ ] Basic type checking
+- [x] Basic type checking
 - [ ] `@syscall`
 - [x] Basic functions
 - [ ] Stack manipulation
