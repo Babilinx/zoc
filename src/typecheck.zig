@@ -48,6 +48,7 @@ fn checkTopLevel(t: *TypeCheck) !void {
             .int => i = try t.checkInt(i),
             .bin_op => i = try t.checkBinOp(i),
             .fn_def => i = try t.checkFnDef(i),
+            .fn_call => i = try t.checkFnCall(i),
             .fn_ret => unreachable,
             else => unreachable,
         }
@@ -109,7 +110,7 @@ fn checkFnDef(t: *TypeCheck, i: ?Index) !?Index {
             .fn_call => i_ = try t.checkFnCall(i_),
             .fn_def => i_ = try t.checkFnDef(i_),
             .eof => unreachable,
-            else => {},
+            else => unreachable,
         }
     }
 
