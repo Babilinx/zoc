@@ -2,6 +2,7 @@ const std = @import("std");
 const lexer = @import("lexer.zig");
 const Parser = @import("parser.zig");
 const Zir = @import("zir.zig");
+const TypeCheck = @import("typecheck.zig");
 const ZirGen = @import("zirgen.zig");
 const Llir = @import("llir.zig");
 const codegen = @import("codegen.zig");
@@ -44,6 +45,9 @@ pub fn main() !void {
         std.debug.print("\n{any}\n", .{zir.instructions.items(.tag)});
         std.debug.print("{any}\n", .{zir.types});
     }
+
+    std.log.info("Checking the types", .{});
+    zir = try TypeCheck.Check(allocator, &zir);
 
     std.log.info("Generating IR", .{});
     var llir = try ZirGen.genZir(allocator, &zir);

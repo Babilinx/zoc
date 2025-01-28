@@ -225,6 +225,10 @@ fn parseFn(p: *Parse) !void {
         },
     };
 
+    // if (p.types.items[in_types_start] == .void and in_types_stop - in_types_start == 1) {
+    // fn_proto.data.fn_proto.arg_types.len = 0;
+    // }
+
     _ = p.expectToken(.l_brace) catch {
         std.log.err("Expected 'l_brace' found '{s}'", .{@tagName(p.token_tags[p.tok_i])});
         std.process.exit(1);
@@ -257,8 +261,17 @@ fn parseRbrace(p: *Parse) !void {
     for (p.instructions.items(.tag), 0..) |tag, i| {
         switch (tag) {
             .fn_proto => {
-                const end = p.instructions.get(i).data.fn_proto.end;
-                if (end == p.tok_i) {
+                const data = p.instructions.get(i).data.fn_proto;
+                if (data.end == p.tok_i) {
+                    p.instructions.set(i, .{
+                        .tag = .fn_proto,
+                        .data = .{
+                            .fn_proto = .{
+                                .end = @intCast(p.instructions.len),
+                                .arg_types = data.arg_types,
+                            },
+                        },
+                    });
                     // ending a function
                     const ret_type = p.instructions.get(i - 1).data.fn_def.ret_type;
                     try p.instructions.append(p.gpa, .{
