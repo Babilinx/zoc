@@ -44,6 +44,16 @@ pub const Inst = struct {
         anyint,
     };
 
+    pub const typemap = std.StaticStringMap(Type).initComptime(.{
+        .{ "void", .void },
+        .{ "u8", .u8 },
+        .{ "usize", .usize },
+        .{ "isize", .isize },
+        .{ "comptime_int", .comptime_int },
+        .{ "anyint", .anyint },
+        .{ "anytype", .@"anytype" },
+    });
+
     pub const Data = union {
         // Literal integer
         int: Int,

@@ -168,9 +168,9 @@ fn getTypeSize(z: *ZirGen, zir_type_index: Index) u8 {
         .void => 0,
         .u8 => 1,
         .usize, .isize => 8,
-        .comptime_int => 8,
-        .anyint => 8,
-        //else => unreachable,
+        .comptime_int => unreachable,
+        .anyint => unreachable,
+        else => unreachable,
     };
 }
 

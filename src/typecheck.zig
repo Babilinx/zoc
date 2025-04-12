@@ -7,6 +7,7 @@ const Type = Zir.Inst.Type;
 const Index = u32;
 const IndexList = std.ArrayList(Index);
 const TypeSlice = Zir.TypeList.Slice;
+const TypeList = Zir.TypeList;
 const InstSlice = Zir.InstList.Slice;
 const SubRange = Zir.Inst.SubRange;
 const StackNode = TypeStack.StackNode;
@@ -19,6 +20,7 @@ inst_i: Index,
 types: TypeSlice,
 stack: TypeStack,
 
+
 pub fn Check(gpa: std.mem.Allocator, zir: *Zir) !Zir {
     var check: TypeCheck = .{
         .gpa = gpa,
@@ -30,7 +32,7 @@ pub fn Check(gpa: std.mem.Allocator, zir: *Zir) !Zir {
 
     try check.checkTopLevel();
 
-    //try check.typeResolve();
+    check.stack = TypeStack.init(gpa, zir.types)
 
     return Zir{
         .instructions = check.insts,

@@ -322,12 +322,10 @@ fn getType(p: *Parse) !Type {
         .identifier => {
             const start = p.token_locs[p.tok_i].start;
             const stop = p.token_locs[p.tok_i].stop;
-            if (std.mem.eql(u8, "void", p.source[start..stop])) {
-                return .void;
-            } else if (std.mem.eql(u8, "usize", p.source[start..stop])) {
-                return .usize;
+            if (Zir.Inst.typemap.get(p.source[start..stop])) |type_tag| {
+                return type_tag;
             } else {
-                return error.NotAType;
+                return error.NotAValidType;
             }
         },
         else => {
